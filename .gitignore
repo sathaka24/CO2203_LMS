@@ -1,0 +1,15 @@
+# Build output
+build/
+bin/
+*.o
+*.d
+*.exe
+*.out
+
+# Editors / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Do NOT ignore data/ - sample data files are a graded deliverable (Spec 9.1)
