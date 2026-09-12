@@ -15,7 +15,7 @@ using namespace std;
 // so no coflict happen even header includes to other file
 namespace {
 
-const size_t USER_FIELDS = 4;
+const int USER_FIELDS = 4;
 
 // The file has to record WHICH subclass each user is, otherwise we could not
 // rebuild the right object on load. dynamic_cast tells us the real type.
@@ -56,7 +56,7 @@ void UserRepository::save(const string& filename) {
         buffer << roleOf(p) << '|'
                << storage::checkListItem(p->getUserID()) << '|'
                << storage::checkField(p->getName()) << '|'
-               << storage::checkField(p->password)       // needs: friend class UserRepository; in Person
+               << storage::checkField(p->password)       // needs:  in Person
                << '\n';
     }
 
