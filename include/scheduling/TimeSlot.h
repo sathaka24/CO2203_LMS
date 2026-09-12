@@ -2,9 +2,8 @@
 #define TIME_SLOT_H
 
 #include <string>
+#include <iostream>
 
-// Owner: M2
-// Used by: M1 (Lecturer::openAttendanceSession parameter), M3 (CourseRepository persistence).
 class TimeSlot {
 private:
     std::string day;
@@ -13,7 +12,11 @@ private:
     std::string location;
 
 public:
-    TimeSlot(std::string d, std::string start, std::string end, std::string loc);
+    // 1. Default constructor
+    TimeSlot();
+
+    // 2. Parameterized constructor with const std::string&
+    TimeSlot(const std::string& d, const std::string& start, const std::string& end, const std::string& loc);
 
     bool operator==(const TimeSlot& other) const;   
     bool overlaps(const TimeSlot& other) const;     
@@ -22,6 +25,8 @@ public:
     std::string getStartTime() const;
     std::string getEndTime() const;
     std::string getLocation() const;
+
+    friend std::ostream& operator<<(std::ostream& os, const TimeSlot& ts);
 };
 
-#endif 
+#endif // TIME_SLOT_H
