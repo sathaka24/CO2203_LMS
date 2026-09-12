@@ -125,8 +125,8 @@ void CourseRepository::save(const string& filename) {
         // here we write our entry to the output stream
         buffer << storage::checkField(c->getCourseType()) << '|'
                << storage::checkListItem(c->getCourseCode()) << '|'
-               << storage::checkField(c->getTitle()) << '|'
-               << c->getCredits() << '|'
+               << storage::checkField(c->getTitle()) << '|' // FUNCALT
+               << c->getCredits() << '|' // FUNCALT
                << c->getCapacity() << '|'
                << storage::checkListItem(lecturerID) << '|'
                << storage::join(prereqCodes, ',') << '|'
