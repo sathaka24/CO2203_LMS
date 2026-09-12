@@ -8,6 +8,9 @@
 // Used by: M3 (UserRepository, main.cpp) via Person*.
 
 class Person {
+
+    friend class UserRepository;
+    
 protected:
     std::string userID;
     std::string name;
