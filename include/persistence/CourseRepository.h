@@ -3,6 +3,7 @@
 
 #include <string>
 #include "persistence/Repository.h"
+#include "persistence/UserRepository.h"
 #include "domain/Course.h"
 
 // Owner: M3
