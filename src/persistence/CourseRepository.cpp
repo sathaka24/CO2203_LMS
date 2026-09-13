@@ -9,6 +9,7 @@
 #include "Timetable.h"
 #include "TimeSlot.h"
 #include "StorageUtils.h"
+#include "Exceptions.h"
 
 #include <fstream>
 #include <map>
