@@ -1,12 +1,9 @@
 #ifndef TIMETABLE_H
 #define TIMETABLE_H
 
+#include "scheduling/TimeSlot.h"
 #include <vector>
 #include <iostream>
-#include "scheduling/TimeSlot.h"
-
-// Owner: M2
-// Used by: M1 (Course::courseTimetable, Student::personalTimetable), M3 (CourseRepository).
 
 class Timetable {
 private:
@@ -14,19 +11,24 @@ private:
     int capacity;
     int count;
 
+    void resize(int newCapacity);
+
 public:
-    Timetable();
+    explicit Timetable(int cap = 5);
+    
+    // Rule of Five
     ~Timetable();
-    Timetable(const Timetable& other);                      // copy constructor
-    Timetable& operator=(const Timetable& other);          // copy assignment
-    Timetable(Timetable&& other) noexcept;                  // move constructor
-    Timetable& operator=(Timetable&& other) noexcept;       // move assignment
+    Timetable(const Timetable& other);
+    Timetable& operator=(const Timetable& other);
+    Timetable(Timetable&& other) noexcept;
+    Timetable& operator=(Timetable&& other) noexcept;
 
-    void addSlot(TimeSlot* t);
-    bool checkClash(const TimeSlot& t) const;           
+    void addSlot(const TimeSlot& slot);
+    bool checkClash(const TimeSlot& t) const;
     std::vector<TimeSlot*> getSlots() const;
+    int getCount() const;
 
-    friend std::ostream& operator<<(std::ostream& os, const Timetable& t);
+    friend std::ostream& operator<<(std::ostream& os, const Timetable& tt);
 };
 
-#endif
+#endif // TIMETABLE_H
