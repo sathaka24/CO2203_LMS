@@ -14,7 +14,7 @@ public:
     void save(const std::string& filename) override;   
     void load(const std::string& filename) override;   
 
-    // login function use at the begining to login to the system
+    // login function use at the begining to login to the system. this will call at the main
     Person* login(); 
 };
 
