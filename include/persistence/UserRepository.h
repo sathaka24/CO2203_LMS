@@ -10,13 +10,12 @@
 
 class UserRepository : public Repository<Person> {
 public:
-    UserRepository();
-    ~UserRepository() override;
 
     void save(const std::string& filename) override;   
     void load(const std::string& filename) override;   
 
-    Person* authenticate(std::string id, std::string pass); 
+    // login function use at the begining to login to the system
+    Person* login(); 
 };
 
 #endif
