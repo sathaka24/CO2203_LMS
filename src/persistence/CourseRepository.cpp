@@ -96,7 +96,7 @@ void CourseRepository::save(const string& filename) {
         // here we store the course time slote details in a string vectors. 
         // each element contain day, start time, end time, location
         vector<string> slotTexts;
-        Timetable* tt = c->getTimetable() // FUNCALT
+        Timetable* tt = c->getTimetable(); // FUNCALT
 
         if (tt != nullptr) {
 
@@ -216,7 +216,7 @@ void CourseRepository::load(const string& filename) {
             storage::split(f[6],','), 
             storage::split(f[8], ','), 
             at
-        }
+        };
 
         pending.push_back(temp);
     }
