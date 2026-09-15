@@ -11,22 +11,22 @@ class Course;             // forward declaration - M1
 // Owner: M2  (see change log entry CL-001 - ownership decision)
 // Used by: M1 (Student::showMenu), M3 (main.cpp).
 
-
 class EnrollmentEngine {
 private:
     UserRepository* userRepo;       // aggregation
     CourseRepository* courseRepo;   // aggregation
 
-    void checkPrerequisites(Student* s, Course* c);   
-    void checkClashes(Student* s, Course* c);         
-    void checkCapacity(Course* c);                    
+    // Validation helpers (Must have 'const' to match .cpp)
+    void checkPrerequisites(Student* s, Course* c) const;   
+    void checkClashes(Student* s, Course* c) const;         
 
 public:
     EnrollmentEngine(UserRepository* u, CourseRepository* c);
-    ~EnrollmentEngine();
+    ~EnrollmentEngine() = default;
 
-    void enrolStudent(std::string sID, std::string cCode);   
-    void dropStudent(std::string sID, std::string cCode);    
+    // Must use const std::string& to match .cpp
+    void enrolStudent(const std::string& sID, const std::string& cCode);   
+    void dropStudent(const std::string& sID, const std::string& cCode);    
 };
 
-#endif
+#endif // ENROLLMENT_ENGINE_H
