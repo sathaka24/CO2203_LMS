@@ -47,3 +47,7 @@ std::string QRCodeCapture::captureNext() {
 void QRCodeCapture::endSession() {
     std::cout << " [QR CODE SESSION CLOSED]\n";
 }
+
+std::string QRCodeCapture::getMethodName() const {
+    return "QR_CODE";
+}

@@ -12,6 +12,7 @@ public:
     virtual void beginSession() = 0;
     virtual std::string captureNext() = 0;
     virtual void endSession() = 0;
+    virtual std::string getMethodName() const = 0;   // saved in each AttendanceRecord
 };
 
 #endif

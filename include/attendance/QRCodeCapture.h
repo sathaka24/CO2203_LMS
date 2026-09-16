@@ -22,6 +22,7 @@ public:
     void beginSession() override;
     std::string captureNext() override;
     void endSession() override;
+    std::string getMethodName() const override;
 };
 
 #endif

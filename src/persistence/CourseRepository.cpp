@@ -116,11 +116,11 @@ void CourseRepository::save(const string& filename) {
 
         string lecturerID;
         if(lec != nullptr){
-            lec->getUserID(); //FUNCALT
+            lecturerID = lec->getUserID(); //FUNCALT
 
         }else {
 
-            string();
+            lecturerID = string();
         }
 
         // here we write our entry to the output stream

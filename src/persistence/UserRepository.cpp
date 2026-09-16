@@ -67,8 +67,7 @@ void UserRepository::load(const string& filename) {
     ifstream in(filename);
     if (!in) {
 
-        // TODO: add exception
-        cout << "User file not found: " + filename;
+        throw MissingFileException("User file not found: " + filename);
     }
 
     clear();   // replace whatever is in memory with the contents of the file
@@ -86,8 +85,7 @@ void UserRepository::load(const string& filename) {
         vector<string> f = storage::split(line, '|');
         if (f.size() != USER_FIELDS) {
 
-            // TODO: add exception
-            cout << at + ": expected 4 fields but found " + to_string(f.size());
+            throw DataCorruptedException(at + ": expected 4 fields but found " + std::to_string(f.size()));
         }
 
         const string& role = f[0];
@@ -95,8 +93,17 @@ void UserRepository::load(const string& filename) {
         const string& name = f[2];
         const string& pass = f[3];
 
-        // TODO: add exceptions
+        if (id.empty()) {
+            throw DataCorruptedException(at + ": user ID is empty");
+        }
+        if (get(id) != nullptr) {
+            throw DataCorruptedException(at + ": duplicate user ID " + id);
+        }
+
         Person* p = createPerson(role, id, name, pass);
+        if (p == nullptr) {
+            throw DataCorruptedException(at + ": unknown role \"" + role + "\"");
+        }
         add(id, p);
     }
 }
@@ -114,7 +121,6 @@ Person* UserRepository::login() {
 
     Person* p = get(id);
     
-    //TODO: here person class need to have a authentication function to check password is matching
     if(p != nullptr && p->authenticate(pass)){ 
 
         return p;

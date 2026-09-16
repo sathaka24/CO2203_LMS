@@ -12,6 +12,9 @@ class FileReplayCapture : public AttendanceCapture {
 private:
     std::string filePath;
     std::ifstream fileStream;
+    int lineNo;   // current line, used in error messages
+
+    std::string parseEvent(const std::string& line) const;
 
 public:
     explicit FileReplayCapture(std::string path);
@@ -20,6 +23,7 @@ public:
     void beginSession() override;
     std::string captureNext() override;
     void endSession() override;
+    std::string getMethodName() const override;
 };
 
 #endif

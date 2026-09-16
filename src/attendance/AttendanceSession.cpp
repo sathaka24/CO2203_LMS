@@ -63,7 +63,16 @@ void AttendanceSession::runCapture() {
     capture->beginSession();
 
     while (true) {
-        std::string studentID = capture->captureNext();
+        
+        std::string studentID;
+        try {
+            studentID = capture->captureNext();
+        } catch (const std::exception& e) {
+            // a malformed event is reported and skipped, the capture continues
+            std::cout << " -> Rejected: " << e.what() << "\n";
+            continue;
+        }
+
         if (studentID.empty()) {
             break;
         }
@@ -72,7 +81,7 @@ void AttendanceSession::runCapture() {
         }
 
         try {
-            markAttendance(studentID, "QR_CAPTURE");
+            markAttendance(studentID, capture->getMethodName());
             std::cout << " -> Success: Attendance recorded for " << studentID << "\n";
         } catch (const std::exception& e) {
             std::cout << " -> Failed: " << e.what() << "\n";
