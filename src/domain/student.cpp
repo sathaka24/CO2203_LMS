@@ -77,3 +77,25 @@ void Student::removeCourse(Course* c) {
 const std::vector<Course*>& Student::getEnrolledCourses() const {
     return enrolledCourses;
 }
+
+bool Student::hasCompletedCourse(const std::string& courseCode) const {
+
+    if (std::find(completedCourses.begin(), completedCourses.end(), courseCode) != completedCourses.end())
+    {
+        return true;
+    } else {
+
+        return false;
+    }
+    
+}
+
+void Student::addCompletedCourse(const std::string& courseCode) {
+    if (!hasCompletedCourse(courseCode)) {
+        completedCourses.push_back(courseCode);
+    }
+}
+
+const std::vector<std::string>& Student::getCompletedCourses() const {
+    return completedCourses;
+}

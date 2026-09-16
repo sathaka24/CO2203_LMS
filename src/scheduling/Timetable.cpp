@@ -126,3 +126,7 @@ std::ostream& operator<<(std::ostream& os, const Timetable& tt) {
     }
     return os;
 }
+
+int Timetable::getCount() const {
+    return count;
+}

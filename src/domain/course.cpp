@@ -68,3 +68,41 @@ std::ostream& operator<<(std::ostream& os, const Course& c) {
     }
     return os;
 }
+
+std::string Course::getTitle() const {
+    return title;
+}
+
+int Course::getCredits() const {
+    return credits;
+}
+
+Lecturer* Course::getLecturer() const {
+    return assignedLecturer;
+}
+
+int Course::getEnrolledCount() const {
+    return static_cast<int>(enrolledStudents.size());
+}
+
+const std::vector<Student*>& Course::getEnrolledStudents() const {
+    return enrolledStudents;
+}
+
+void Course::addStudent(Student* s) {
+    if (!s) {
+        return;
+    }
+    auto it = std::find(enrolledStudents.begin(), enrolledStudents.end(), s);
+    if (it == enrolledStudents.end()) {
+        enrolledStudents.push_back(s);
+    }
+}
+
+void Course::removeStudent(Student* s) {
+    
+    auto it = std::find(enrolledStudents.begin(), enrolledStudents.end(), s);
+    if (it != enrolledStudents.end()) {
+        enrolledStudents.erase(it);
+    }
+}

@@ -7,6 +7,7 @@
 #include <iostream>
 
 class Lecturer;             // forward declaration - M1
+class Student;              // forward declaration - M1
 class Timetable;            // forward declaration - M2
 class AttendanceRegister;   // forward declaration - M2
 
@@ -23,6 +24,7 @@ protected:
     std::vector<Course*> prerequisites;      // aggregation
     Timetable* courseTimetable;              // composition - owned
     AttendanceRegister* attendanceRegister;  // composition - owned
+    std::vector<Student*> enrolledStudents;  // aggregation - not owned
 
 public:
     Course(std::string code, std::string title, int cred, int cap);
@@ -33,6 +35,15 @@ public:
     Timetable* getTimetable() const;
     AttendanceRegister* getRegister() const;
     std::vector<Course*> getPrerequisites() const;
+
+    std::string getTitle() const;
+    int getCredits() const;
+    Lecturer* getLecturer() const;
+
+    int getEnrolledCount() const;
+    const std::vector<Student*>& getEnrolledStudents() const;
+    void addStudent(Student* s);
+    void removeStudent(Student* s);
 
     void assignLecturer(Lecturer* l);
     void addPrerequisite(Course* c);
