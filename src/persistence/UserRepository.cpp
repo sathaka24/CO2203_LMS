@@ -1,9 +1,9 @@
 #include "UserRepository.h"
 
-#include "Student.h"
-#include "Lecturer.h"
-#include "Administrator.h"
-#include "StorageUtils.h"
+#include "domain/Student.h"
+#include "domain/Lecturer.h"
+#include "domain/Administrator.h"
+#include "persistence/StorageUtils.h"
 
 #include <fstream>
 #include <sstream>

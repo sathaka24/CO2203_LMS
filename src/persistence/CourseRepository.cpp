@@ -1,15 +1,15 @@
-#include "CourseRepository.h"
+#include "persistence/CourseRepository.h"
 
-#include "UserRepository.h"
-#include "Student.h"
-#include "Lecturer.h"
-#include "LectureCourse.h"
-#include "LabCourse.h"
-#include "ProjectCourse.h"
-#include "Timetable.h"
-#include "TimeSlot.h"
-#include "StorageUtils.h"
-#include "Exceptions.h"
+#include "persistence/UserRepository.h"
+#include "domain/Student.h"
+#include "domain/Lecturer.h"
+#include "domain/LectureCourse.h"
+#include "domain/LabCourse.h"
+#include "domain/ProjectCourse.h"
+#include "scheduling/Timetable.h"
+#include "scheduling/TimeSlot.h"
+#include "persistence/StorageUtils.h"
+#include "exception/Exceptions.h"
 
 #include <fstream>
 #include <map>
