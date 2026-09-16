@@ -39,7 +39,7 @@ public:
 
     void add(string id, T* item){
         // TODO: Exceptions
-        items[id] = item
+        items[id] = item;
     }
 
     T* get(string id){
@@ -59,7 +59,7 @@ public:
 
         vector<T*> objects;
         objects.reserve(items.size()); // here we do reservation before. cuz it improve the performance by avoiding reinitializing every time push packing
-        for(auto& itme : times){
+        for(auto& item : times){
             objects.push_back(item.second);
         }
 

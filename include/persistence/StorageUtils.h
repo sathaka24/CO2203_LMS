@@ -19,7 +19,7 @@ inline std::vector<std::string> split(const std::string& text, char delim) {
     std::vector<std::string> parts;
 
     if (text.empty()){ 
-        return parts
+        return parts;
     };
 
     std::string part;
