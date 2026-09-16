@@ -45,7 +45,7 @@ void Student::addCourse(Course* c) {
         if (personalTimetable && c->getTimetable()) {
             for (TimeSlot* slot : c->getTimetable()->getSlots()) {
                 if (slot) {
-                    personalTimetable->addSlot(new TimeSlot(*slot));
+                    personalTimetable->addSlot(*slot);
                 }
             }
         }
@@ -66,7 +66,7 @@ void Student::removeCourse(Course* c) {
             if (course && course->getTimetable()) {
                 for (TimeSlot* slot : course->getTimetable()->getSlots()) {
                     if (slot) {
-                        personalTimetable->addSlot(new TimeSlot(*slot));
+                        personalTimetable->addSlot(*slot);
                     }
                 }
             }

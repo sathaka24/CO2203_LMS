@@ -207,7 +207,7 @@ void CourseRepository::load(const string& filename) {
                                              "\" (expected day,start,end,location)");
             }
 
-            c->getTimetable()->addSlot(new TimeSlot(s[0], s[1], s[2], s[3])); // FUNCALT
+            c->getTimetable()->addSlot(TimeSlot(s[0], s[1], s[2], s[3])); // FUNCALT
 
         }
 
