@@ -1,30 +1,272 @@
 #include "domain/Lecturer.h"
 #include "domain/Course.h"
+#include "domain/Student.h"
 #include "attendance/AttendanceSession.h"
 #include "attendance/AttendanceRegister.h"
+#include "persistence/UserRepository.h"
+#include "persistence/CourseRepository.h"
 #include "scheduling/TimeSlot.h"
+#include "attendance/QRCodeCapture.h"
+#include "attendance/FileReplayCapture.h"
+#include "app/SystemContext.h"
 #include <iostream>
 #include <algorithm>
+#include <limits>
+#include <string>
+#include <ctime>
+
+struct SystemContext;
 
 Lecturer::Lecturer(std::string id, std::string name, std::string pass)
     : Person(std::move(id), std::move(name), std::move(pass)) {}
 
 Lecturer::~Lecturer() = default;
 
-void Lecturer::showMenu() {
-    std::cout << "\n========================================\n";
-    std::cout << "           LECTURER DASHBOARD           \n";
-    std::cout << " Welcome, " << getName() << " (" << getUserID() << ")\n";
-    std::cout << "========================================\n";
-    std::cout << " 1. View Assigned Courses\n";
-    std::cout << " 2. View Course Enrolment List\n";
-    std::cout << " 3. Open Attendance Session\n";
-    std::cout << " 4. Close Attendance Session\n";
-    std::cout << " 5. Record Attendance Correction\n";
-    std::cout << " 6. View Attendance Statistics\n";
-    std::cout << " 0. Logout\n";
-    std::cout << "========================================\n";
-    std::cout << "Select option: ";
+void Lecturer::showMenu(SystemContext& ctx) {
+
+    // here we use lambda function get the whole input line (same style as admin menu)
+    auto readLine = [](const std::string& prompt) {
+        std::string s;
+        std::cout << prompt;
+        if (!std::getline(std::cin, s)) {
+            throw std::runtime_error("Input closed");
+        }
+        return s;
+    };
+
+    // here we use lambda function to get integer, asking again on bad input
+    auto readInt = [&](const std::string& prompt) {
+        while (true) {
+            std::string s = readLine(prompt);
+            try {
+                std::size_t used = 0;
+                int value = std::stoi(s, &used);
+                if (used == s.size()) {
+                    return value;
+                }
+            } catch (const std::exception&) {}
+            std::cout << "Please enter a whole number.\n";
+        }
+    };
+
+    // lecturer pick one of their own courses (returns nullptr on cancel)
+    auto pickCourse = [&]() -> Course* {
+
+        if (assignedCourses.empty()) {
+            std::cout << "You have no assigned courses.\n";
+            return nullptr;
+        }
+        for (int i = 0; i < assignedCourses.size(); ++i) {
+
+            std::cout << "  " << (i + 1) << ". " << *assignedCourses[i] << "\n";
+        }
+        int choice = readInt("Select course (0 to cancel): ");
+
+        if (choice < 1 || choice > static_cast<int>(assignedCourses.size())) {
+            return nullptr;
+        }
+        return assignedCourses[choice - 1];
+    };
+
+    // prints all sessions of a course; returns false if there are not anything
+    auto listSessions = [](Course* c) {
+
+        auto sessions = c->getRegister()->getSessions();
+
+        if (sessions.empty()) {
+            std::cout << "No sessions for " << c->getCourseCode() << " yet.\n";
+            return false;
+        }
+        for (AttendanceSession* s : sessions) {
+            std::cout << "  Session #" << s->getSessionID() << " " << s->getTimeSlot()
+                      << (s->isSessionOpen() ? "  [OPEN]" : "  [CLOSED]")
+                      << "  records: " << s->getRecords().size() << "\n";
+        }
+        return true;
+    };
+
+    // finds the lecturer currently open session (newest first)
+    auto findOpenSession = [&]() -> std::pair<Course*, AttendanceSession*> {
+
+        for (Course* c : assignedCourses) {
+            
+            auto sessions = c->getRegister()->getSessions();
+
+            for (auto it = sessions.rbegin(); it != sessions.rend(); ++it) {
+
+                if ((*it)->isSessionOpen()) {
+
+                    return {c, *it};
+                }
+            }
+        }
+        return {nullptr, nullptr};
+    };
+
+    // our main loop
+    while (true) {
+        std::cout << "\n========================================\n";
+        std::cout << "           LECTURER DASHBOARD           \n";
+        std::cout << " Welcome, " << getName() << " (" << getUserID() << ")\n";
+        std::cout << "========================================\n";
+        std::cout << " 1. View Assigned Courses\n";
+        std::cout << " 2. View Course Enrolment List\n";
+        std::cout << " 3. Open Attendance Session\n";
+        std::cout << " 4. Close Attendance Session\n";
+        std::cout << " 5. Record Attendance Correction\n";
+        std::cout << " 6. View Attendance Statistics\n";
+        std::cout << " 0. Logout\n";
+        std::cout << "========================================\n";
+
+
+        try {
+            int choice = readInt("Select option: ");
+            bool changed = false;
+
+            switch (choice) {
+
+            case 0:
+                std::cout << "Logging out...\n";
+                return;
+
+            // view assigned course
+            case 1: {
+                if (assignedCourses.empty()) {
+                    std::cout << "You have no assigned courses.\n";
+                }
+                for (Course* c : assignedCourses) {
+                    std::cout << "  " << *c << "\n";
+                }
+                break;
+            }
+
+            // view enrolled list
+            case 2: {
+                Course* c = pickCourse();
+                if (c) {
+                    viewEnrolmentList(c); // NOTADDED
+                }
+                break;
+            }
+
+            // open attendece session
+            // TODO:
+            case 3: {
+
+                auto [openCourse, openSession] = findOpenSession();
+
+                if (openSession) {
+
+                    throw std::invalid_argument("Session #" + std::to_string(openSession->getSessionID()) +
+                                                " for " + openCourse->getCourseCode() +
+                                                " is still open. Close it first (option 4)");
+                    break;
+                }
+
+                Course* c = pickCourse();
+                if (!c) break;
+
+                std::string day   = readLine("Day (e.g. Monday): ");
+                std::string start = readLine("Start time (HH:MM): ");
+                std::string end   = readLine("End time (HH:MM): ");
+                std::string loc   = readLine("Location: ");
+                int duration      = readInt("Active duration (minutes): ");
+
+                AttendanceSession* session =
+                    openAttendanceSession(c, TimeSlot(day, start, end, loc), duration);
+                if (!session) break;
+
+                std::cout << "Capture method:\n"
+                          << "  1. QR code\n"
+                          << "  2. Manual entry\n"
+                          << "  0. Leave session open (capture later)\n";
+                int method = readInt("Select: ");
+
+                if (method == 1) {
+                    std::string hash = c->getCourseCode() + "-" +
+                                       std::to_string(session->getSessionID()) + "-" +
+                                       std::to_string(std::time(nullptr) % 10000);
+
+                    QRCodeCapture qr(std::to_string(session->getSessionID()), duration, hash);
+                    session->setCaptureMechanism(&qr);
+                    session->runCapture();
+                    session->setCaptureMechanism(nullptr); // qr dies at end of this block
+                }
+                else if (method == 2) {
+                    FileReplayCapture fcapture("attendeceshee.txt");
+                    fcapture.beginSession();
+                    fcapture.captureNext();
+                    fcapture.endSession();
+
+
+                }
+                break;
+            }
+
+            // close the currentl opened session
+            case 4: {
+
+                auto [c, session] = findOpenSession();
+
+                if (!session) {
+                    std::cout << "You have no open attendance session.\n";
+                    break;
+                }
+
+                std::cout << "Closing session #" << session->getSessionID()
+                          << " for " << c->getCourseCode() << " " << session->getTimeSlot() << "\n";
+                          
+                closeAttendanceSession(c, session->getSessionID());
+                changed = true;
+                break;
+            }
+
+            // attendece correction
+            case 5: {
+                Course* c = pickCourse();
+                if (!c || !listSessions(c)) {
+                    break;
+                }
+                int id             = readInt("Session ID: ");
+                std::string sID    = readLine("Student ID: ");
+                std::string reason = readLine("Reason: ");
+                recordCorrection(c, id, sID, reason);
+                changed = true;
+                break;
+            }
+
+            // attendece statistics
+            case 6: {
+                Course* c = pickCourse();
+                if (!c) break;
+                AttendanceRegister* reg = c->getRegister();
+
+                std::cout << "\n--- Attendance for " << c->getCourseCode() << " ---\n";
+                if (!listSessions(c)) break;
+
+                AttendanceRegister* reg = c->getRegister();
+                for (Student* s : c->getEnrolledStudents()) {
+                    std::cout << "  " << s->getUserID() << "  " << s->getName() << ": "
+                              << reg->calculateStudentPercentage(s->getUserID()) << "%\n";
+                }
+
+                break;
+            }
+
+            default:
+                std::cout << "Invalid option. Try again.\n";
+            }
+
+            if (changed) {   // save straight away, same as admin menu
+                ctx.users.save(ctx.usersFile);
+                ctx.courses.save(ctx.coursesFile);
+            }
+
+        }
+        catch (const std::exception& e) {
+            std::cout << "[Error] " << e.what() << "\n";
+        }
+    }
 }
 
 std::vector<Course*> Lecturer::getAssignedCourses() const {
@@ -37,7 +279,6 @@ void Lecturer::viewEnrolmentList(Course* c) const {
         return;
     }
 
-    // FR2.3: Only view enrolment for their own assigned courses
     auto it = std::find(assignedCourses.begin(), assignedCourses.end(), c);
     if (it == assignedCourses.end()) {
         std::cout << "[Access Denied] You are not the assigned lecturer for course " 
@@ -86,12 +327,15 @@ void Lecturer::closeAttendanceSession(Course* c, int sessionID) {
     }
 
     for (AttendanceSession* session : c->getRegister()->getSessions()) {
-        if (session) {
+
+        if (session && session->getSessionID() == sessionID) {
             session->closeSession();
             std::cout << "[Success] Attendance Session #" << sessionID << " closed.\n";
             return;
         }
     }
+
+    std::cout << "[Error] Session #" << sessionID << " not found.\n";
 }
 
 void Lecturer::recordCorrection(Course* c, int sessionID, std::string studentID, std::string reason) {
@@ -116,10 +360,16 @@ void Lecturer::recordCorrection(Course* c, int sessionID, std::string studentID,
     }
 }
 
+void Lecturer::addAssignedCourse(Course* c) {
+    if (c && std::find(assignedCourses.begin(), assignedCourses.end(), c) == assignedCourses.end()) {
+        assignedCourses.push_back(c);
+    }
+}
+
 void Lecturer::removeAssignedCourse(Course* c) {
 
     auto it = std::find(assignedCourses.begin(), assignedCourses.end(), c);
-    
+
     if (it != assignedCourses.end()) {
         assignedCourses.erase(it);
     }

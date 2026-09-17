@@ -20,7 +20,7 @@ public:
     Lecturer(std::string id, std::string name, std::string pass);
     ~Lecturer() override;
 
-    void showMenu() override;
+    void showMenu(SystemContext& ctx) override;
 
     std::vector<Course*> getAssignedCourses() const;
     void viewEnrolmentList(Course* c) const;
@@ -29,6 +29,7 @@ public:
     void closeAttendanceSession(Course* c, int sessionID);
     void recordCorrection(Course* c, int sessionID, std::string studentID, std::string reason);
 
+    void addAssignedCourse(Course* c);
     void removeAssignedCourse(Course* c);
 };
 

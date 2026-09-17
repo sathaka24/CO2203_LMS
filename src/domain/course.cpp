@@ -44,7 +44,15 @@ std::vector<Course*> Course::getPrerequisites() const {
 }
 
 void Course::assignLecturer(Lecturer* l) {
+    if (assignedLecturer == l) return;
+
+    if (assignedLecturer) {
+        assignedLecturer->removeAssignedCourse(this);   // old lecturer removed
+    }
     assignedLecturer = l;
+    if (l) {
+        l->addAssignedCourse(this);                     // new lecturer get it
+    }
 }
 
 void Course::addPrerequisite(Course* c) {
@@ -122,7 +130,7 @@ void Course::setCapacity(int newCapacity) {
 void Course::removePrerequisite(Course* c) {
 
     auto it = std::find(prerequisites.begin(), prerequisites.end(), c);
-    
+
     if (it != prerequisites.end()) {
         prerequisites.erase(it);
     }
