@@ -138,6 +138,8 @@ void CourseRepository::save(const string& filename) {
     }
 
     storage::writeFile(filename, buffer.str());
+
+    saveAttendance();
 }
 
 void CourseRepository::load(const string& filename) {
@@ -279,6 +281,8 @@ void CourseRepository::load(const string& filename) {
             link.course->addStudent(s);
         }
     }
+
+    loadAttendance();
 }
 
 // below format we use for attendece record
@@ -422,7 +426,7 @@ void CourseRepository::loadAttendance() {
             s->restoreCorrection(CorrectionRecord(f[3], f[4], f[5], f[6]));
         }
         else {
-            
+
             throw DataCorruptedException(at + ": unknown line type \"" + kind + "\"");
         }
     }
