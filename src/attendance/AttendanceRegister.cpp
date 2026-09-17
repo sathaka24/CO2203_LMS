@@ -34,6 +34,15 @@ float AttendanceRegister::calculateStudentPercentage(std::string studID) const {
                     break;
                 }
             }
+
+            for(const auto& rec : s->getCorrections()){
+                if (rec.getStudentID() == studID && rec.getStatus() == "PRESENT")
+                {
+                    attended++;
+                    break;
+                }
+                
+            }
         }
     }
 

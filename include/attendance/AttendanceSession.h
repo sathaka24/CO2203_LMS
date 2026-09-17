@@ -36,7 +36,7 @@ public:
     void runCapture();
 
     void markAttendance(std::string studentID, std::string method);
-    void addCorrection(std::string studentID, std::string actingLecturerID, std::string reason);
+    void addCorrection(std::string studentID, std::string actingLecturerID, std::string reason, std::string status);
 
     void restoreRecord(const AttendanceRecord& r);
     void restoreCorrection(const CorrectionRecord& c);

@@ -188,7 +188,7 @@ void Student::showMenu(SystemContext& ctx) {
                 if (pick < 1 || pick > static_cast<int>(open.size())) break;
 
                 // markAttendance throws if closed or already marked
-                open[pick - 1].second->markAttendance(getUserID(), "SELF_CHECKIN"); // NOTADDED
+                open[pick - 1].second->markAttendance(getUserID(), "SELF_CHECKIN");
 
                 std::cout << "[Success] Checked in to " << open[pick - 1].first->getCourseCode()
                           << " session #" << open[pick - 1].second->getSessionID() << "\n";

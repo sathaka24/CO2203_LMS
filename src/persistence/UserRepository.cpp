@@ -81,7 +81,7 @@ void UserRepository::save(const string& filename) {
         buffer << roleOf(p) << '|'
                << storage::checkListItem(p->getUserID()) << '|'
                << storage::checkField(p->getName()) << '|'
-               << storage::checkField(p->password)
+               << storage::checkField(p->password) << '|'
                << storage::join(completed, ',')
                << '\n';
     }

@@ -70,8 +70,8 @@ void AttendanceSession::markAttendance(std::string studentID, std::string method
     records.emplace_back(studentID, generateTimestamp(), "PRESENT", method);
 }
 
-void AttendanceSession::addCorrection(std::string studentID, std::string actingLecturerID, std::string reason) {
-    corrections.emplace_back(studentID, actingLecturerID, reason, generateTimestamp());
+void AttendanceSession::addCorrection(std::string studentID, std::string actingLecturerID, std::string reason, std::string status) {
+    corrections.emplace_back(studentID, actingLecturerID, reason, status, generateTimestamp());
 }
 
 void AttendanceSession::runCapture() {

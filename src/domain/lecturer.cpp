@@ -196,12 +196,16 @@ void Lecturer::showMenu(SystemContext& ctx) {
                     session->runCapture(); // here we start the capturing
 
                     session->setCaptureMechanism(nullptr); // qr dies at end of this block
+
+                    changed = true;
                 }
                 else if (method == 2) {
                        FileReplayCapture fc(readLine("Replay file path: "));
                         session->setCaptureMechanism(&fc);
                         session->runCapture();
                         session->setCaptureMechanism(nullptr);
+
+                        changed = true;
 
 
                 }
@@ -235,7 +239,8 @@ void Lecturer::showMenu(SystemContext& ctx) {
                 int id             = readInt("Session ID: ");
                 std::string sID    = readLine("Student ID: ");
                 std::string reason = readLine("Reason: ");
-                recordCorrection(c, id, sID, reason);
+                std::string status = readLine("status (PRESENT/ABSENT): ");
+                recordCorrection(c, id, sID, reason, status);
                 changed = true;
                 break;
             }
@@ -356,7 +361,7 @@ void Lecturer::closeAttendanceSession(Course* c, int sessionID) {
     std::cout << "[Error] Session #" << sessionID << " not found.\n";
 }
 
-void Lecturer::recordCorrection(Course* c, int sessionID, std::string studentID, std::string reason) {
+void Lecturer::recordCorrection(Course* c, int sessionID, std::string studentID, std::string reason, std::string status) {
     if (!c || !c->getRegister()) {
         std::cerr << "[Error] Invalid course or register.\n";
         return;
@@ -370,7 +375,7 @@ void Lecturer::recordCorrection(Course* c, int sessionID, std::string studentID,
 
     for (AttendanceSession* session : c->getRegister()->getSessions()) {
         if (session) {
-            session->addCorrection(studentID, this->getUserID(), reason);
+            session->addCorrection(studentID, this->getUserID(), reason, status);
             std::cout << "[Success] Correction appended for Student: " << studentID 
                       << " (Lecturer: " << getUserID() << ").\n";
             return;
