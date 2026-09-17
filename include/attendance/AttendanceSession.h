@@ -6,6 +6,7 @@
 #include "scheduling/TimeSlot.h"
 #include "attendance/AttendanceRecord.h"
 #include "attendance/CorrectionRecord.h"
+#include <ctime>
 
 class Course;              
 class AttendanceCapture;   
@@ -25,12 +26,20 @@ private:
     Course* course;                 // aggregation - back-reference
     AttendanceCapture* capture;     // aggregation - runtime swappable, not owned
 
+    std::time_t openedAt;   // when the session was opened
+    int durationMins;       // 0 = no automatic expiry
+
 public:
     AttendanceSession(int id, TimeSlot slot, Course* c);
     ~AttendanceSession();
 
-    void openSession();
+    void openSession(int durationMins = 0);
     void closeSession();
+
+    void restoreOpenState(std::time_t openedAt, int durationMins);
+    bool isExpired() const;
+    std::time_t getOpenedAt() const;
+    int getDurationMins() const;
 
     void setCaptureMechanism(AttendanceCapture* c); 
     void runCapture();

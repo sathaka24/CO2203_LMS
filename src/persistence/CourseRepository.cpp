@@ -296,7 +296,7 @@ void CourseRepository::load(const string& filename) {
 
 void CourseRepository::saveAttendance() const {
     ostringstream buffer;
-    buffer << "# SESSION|code|sessionID|day|start|end|location|state\n"
+    buffer << "# SESSION|code|sessionID|day|start|end|location|state|openedAt|durationMins\n"
            << "# RECORD|code|sessionID|studentID|timestamp|status|method\n"
            << "# CORRECTION|code|sessionID|studentID|lecturerID|reason|status|timestamp\n";
 
@@ -318,7 +318,9 @@ void CourseRepository::saveAttendance() const {
                    << storage::checkField(t.getStartTime()) << '|'
                    << storage::checkField(t.getEndTime()) << '|'
                    << storage::checkField(t.getLocation()) << '|'
-                   << (s->isSessionOpen() ? "OPEN" : "CLOSED") << '\n';
+                   << (s->isSessionOpen() ? "OPEN" : "CLOSED") << '\n'
+                   << s->getOpenedAt() << '|' 
+                   << s->getDurationMins() << '\n';
 
             for (const AttendanceRecord& r : s->getRecords()) {
                 buffer << "RECORD|" << code << '|' << id << '|'
@@ -381,8 +383,8 @@ void CourseRepository::loadAttendance() {
 
         if (kind == "SESSION") {
 
-            if (f.size() != 8) {
-                throw DataCorruptedException(at + ": SESSION needs 8 fields");
+            if (f.size() != 8 && f.size() != 10) {
+                throw DataCorruptedException(at + ": SESSION needs 8 or 10 fields");
             }
             if (sessions.count(key)) {
                 throw DataCorruptedException(at + ": duplicate session " + key);
@@ -394,7 +396,20 @@ void CourseRepository::loadAttendance() {
             AttendanceSession* s = new AttendanceSession(sessionID, TimeSlot(f[3], f[4], f[5], f[6]), c);
 
             if (f[7] == "OPEN") {
-                s->openSession();
+
+                long long opened = 0;
+                int duration = 0;
+
+                if (f.size() == 10) {
+
+                    try { opened = std::stoll(f[8]); }
+                    
+                    catch (const std::exception&) {
+                        throw DataCorruptedException(at + ": \"" + f[8] + "\" is not a valid time");
+                    }
+                    duration = storage::toInt(f[9], at);
+                }
+                s->restoreOpenState(static_cast<std::time_t>(opened), duration);
             }
 
             c->getRegister()->addSession(s);   // register owns it from here. means course owns

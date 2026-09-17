@@ -19,12 +19,17 @@ static std::string generateTimestamp() {
 }
 
 AttendanceSession::AttendanceSession(int id, TimeSlot slot, Course* c)
-    : sessionID(id), timeSlot(slot), isOpen(false), course(c), capture(nullptr) {}
+    : sessionID(id), timeSlot(slot), isOpen(false), openedAt(0), durationMins(0), course(c), capture(nullptr) {}
 
 AttendanceSession::~AttendanceSession() = default;
 
-void AttendanceSession::openSession() {
+void AttendanceSession::openSession(int duration) {
+    if (duration < 0) {
+        throw AttendanceException("Session duration cannot be negative");
+    }
     isOpen = true;
+    openedAt = std::time(nullptr);
+    durationMins = duration;
 }
 
 void AttendanceSession::closeSession() {
@@ -36,9 +41,9 @@ void AttendanceSession::setCaptureMechanism(AttendanceCapture* c) {
 }
 
 void AttendanceSession::markAttendance(std::string studentID, std::string method) {
-    if (!isOpen) {
+    if (!isSessionOpen()) {
 
-        throw SessionClosedException("Session #" + std::to_string(sessionID) + " is closed.");
+    throw SessionClosedException("Session #" + std::to_string(sessionID) + (isOpen ? " has expired." : " is closed."));
     }
     if (course == nullptr) {
 
@@ -74,19 +79,38 @@ void AttendanceSession::addCorrection(std::string studentID, std::string actingL
     corrections.emplace_back(studentID, actingLecturerID, reason, status, generateTimestamp());
 }
 
+void AttendanceSession::restoreOpenState(std::time_t opened, int duration) {
+    isOpen = true;
+    openedAt = opened;
+    durationMins = duration;
+}
+
+bool AttendanceSession::isExpired() const {
+    if (durationMins == 0) {
+        return false;
+    }
+    return std::time(nullptr) >= openedAt + durationMins * 60;
+}
+
 void AttendanceSession::runCapture() {
     if (!capture) {
         std::cout << " [ERROR] No capture mechanism assigned to session #" << sessionID << "\n";
         return;
     }
 
-    if (!isOpen) {
-        openSession();
+    if (!isSessionOpen()) {
+
+    throw SessionClosedException("Session #" + std::to_string(sessionID) + " is not open");
     }
 
     capture->beginSession();
 
     while (true) {
+
+        if (isExpired()) {
+        std::cout << " Session #" << sessionID << " has expired. Capture stopped.\n";
+        break;
+        }
         
         std::string studentID;
         try {
@@ -118,7 +142,9 @@ void AttendanceSession::runCapture() {
     capture->endSession();
 }
 
-bool AttendanceSession::isSessionOpen() const { return isOpen; }
+bool AttendanceSession::isSessionOpen() const { return isOpen && !isExpired(); }
+std::time_t AttendanceSession::getOpenedAt() const { return openedAt; }
+int AttendanceSession::getDurationMins() const { return durationMins; }
 int AttendanceSession::getSessionID() const { return sessionID; }
 TimeSlot AttendanceSession::getTimeSlot() const { return timeSlot; }
 std::vector<AttendanceRecord> AttendanceSession::getRecords() const { return records; }
