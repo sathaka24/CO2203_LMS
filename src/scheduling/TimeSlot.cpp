@@ -48,3 +48,7 @@ std::ostream& operator<<(std::ostream& os, const TimeSlot& ts) {
     os << "[" << ts.day << " " << ts.startTime << "-" << ts.endTime << " @ " << ts.location << "]";
     return os;
 }
+
+bool TimeSlot::operator&(const TimeSlot& other) const {
+    return overlaps(other);
+}

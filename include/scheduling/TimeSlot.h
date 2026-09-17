@@ -19,7 +19,8 @@ public:
     TimeSlot(const std::string& d, const std::string& start, const std::string& end, const std::string& loc);
 
     bool operator==(const TimeSlot& other) const;   
-    bool overlaps(const TimeSlot& other) const;     
+    bool overlaps(const TimeSlot& other) const;    
+    bool operator&(const TimeSlot& other) const;   // true if the two slots overlap 
 
     std::string getDay() const;
     std::string getStartTime() const;

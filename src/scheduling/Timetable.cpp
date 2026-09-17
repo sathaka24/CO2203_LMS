@@ -105,7 +105,7 @@ void Timetable::addSlot(const TimeSlot& slot) {
 
 bool Timetable::checkClash(const TimeSlot& t) const {
     for (int i = 0; i < count; ++i) {
-        if (slots[i]->overlaps(t)) {
+        if (*slots[i] & t) {
             return true;
         }
     }
