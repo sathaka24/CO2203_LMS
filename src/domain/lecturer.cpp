@@ -158,7 +158,7 @@ void Lecturer::showMenu(SystemContext& ctx) {
 
                 if (openSession) {
 
-                    throw std::invalid_argument("Session #" + std::to_string(openSession->getSessionID()) +
+                    throw AttendanceException("Session #" + std::to_string(openSession->getSessionID()) +
                                                 " for " + openCourse->getCourseCode() +
                                                 " is still open. Close it first (option 4)");
                     break;
@@ -381,7 +381,7 @@ void Lecturer::recordCorrection(Course* c, int sessionID, std::string studentID,
         }
     }
     if (!enrolled) {
-        throw std::invalid_argument("Student " + studentID + " is not enrolled in " + c->getCourseCode());
+        throw NotEnrolledException("Student " + studentID + " is not enrolled in " + c->getCourseCode());
     }
 
     // reason is written to the attendance file
