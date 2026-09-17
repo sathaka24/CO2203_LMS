@@ -222,7 +222,7 @@ void CourseRepository::load(const string& filename) {
         pending.push_back(temp);
     }
 
-    // ---- Pass 2: turn the stored IDs back into pointers --------------------
+    //turn the stored IDs back into pointers
     for (const PendingLinks& link : pending) {
 
         if (!link.lecturerID.empty()) {
@@ -259,7 +259,7 @@ void CourseRepository::load(const string& filename) {
         for (const string& studentID : link.studentIDs) {
 
             // here we get the enrolled students to the course. 
-            // then what we do is we add the course pointer to student object. so each student's course vector fill by this when loading
+            // then what we do is we add the course pointer to student object. and student pointer to course object so each student's course vector fill by this when loading
             Student* s = dynamic_cast<Student*>(userRepo->get(studentID));
 
             if (s == nullptr) {
@@ -268,6 +268,7 @@ void CourseRepository::load(const string& filename) {
             }
 
             s->addCourse(link.course); // FUNCALT
+            link.course->addStudent(s);
         }
     }
 }

@@ -28,6 +28,8 @@ public:
     AttendanceSession* openAttendanceSession(Course* c, TimeSlot slot, int durationMins);
     void closeAttendanceSession(Course* c, int sessionID);
     void recordCorrection(Course* c, int sessionID, std::string studentID, std::string reason);
+
+    void removeAssignedCourse(Course* c);
 };
 
 #endif

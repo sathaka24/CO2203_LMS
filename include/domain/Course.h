@@ -39,14 +39,21 @@ public:
     std::string getTitle() const;
     int getCredits() const;
     Lecturer* getLecturer() const;
-
     int getEnrolledCount() const;
+
+    void setTitle(const std::string& newTitle);
+    void setCredits(int newCredits);
+    void setCapacity(int newCapacity);
+    
+
     const std::vector<Student*>& getEnrolledStudents() const;
     void addStudent(Student* s);
     void removeStudent(Student* s);
 
     void assignLecturer(Lecturer* l);
     void addPrerequisite(Course* c);
+
+    void removePrerequisite(Course* c);
 
     virtual std::string getCourseType() const = 0;
     virtual float calculateFinalGrade(std::map<std::string, float> componentScores) const = 0;

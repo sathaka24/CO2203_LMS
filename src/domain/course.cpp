@@ -106,3 +106,24 @@ void Course::removeStudent(Student* s) {
         enrolledStudents.erase(it);
     }
 }
+
+void Course::setTitle(const std::string& newTitle) { 
+    title = newTitle; 
+}
+void Course::setCredits(int newCredits) {
+    credits = newCredits; 
+
+}
+void Course::setCapacity(int newCapacity) {
+    capacity = newCapacity;
+
+}
+
+void Course::removePrerequisite(Course* c) {
+
+    auto it = std::find(prerequisites.begin(), prerequisites.end(), c);
+    
+    if (it != prerequisites.end()) {
+        prerequisites.erase(it);
+    }
+}

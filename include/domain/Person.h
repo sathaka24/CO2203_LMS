@@ -7,6 +7,8 @@
 // Owner: M1
 // Used by: M3 (UserRepository, main.cpp) via Person*.
 
+struct SystemContext;
+
 class Person {
 
     friend class UserRepository;
@@ -25,9 +27,13 @@ public:
 
     std::string getUserID() const;
     std::string getName() const;
+
+    void setName(const std::string& newName);
+    void setPassword(const std::string& newPass);
+
     bool authenticate(std::string pass) const;
 
-    virtual void showMenu() = 0;          // pure virtual so the Person is abstract class
+    virtual void showMenu(SystemContext& ctx) = 0;          // pure virtual so the Person is abstract class
 
     static int getTotalUsers();
 

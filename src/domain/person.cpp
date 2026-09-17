@@ -32,3 +32,10 @@ std::ostream& operator<<(std::ostream& os, const Person& p) {
     os << "[ID: " << p.userID << ", Name: " << p.name << "]";
     return os;
 }
+
+void Person::setName(const std::string& newName) { 
+    name = newName; 
+}
+void Person::setPassword(const std::string& newPass) { 
+    password = newPass; 
+}

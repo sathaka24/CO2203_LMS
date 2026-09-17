@@ -8,13 +8,19 @@ class Course;   // forward declaration - M1
 
 // Owner: M1
 // Used by: M3 (UserRepository, main.cpp).
+struct SystemContext;
 
 class Administrator : public Person {
+
+private:
+
+    SystemContext* context = nullptr;   // set by showMenu, used by the other admin functions
+
 public:
     Administrator(std::string id, std::string name, std::string pass);
     ~Administrator() override;
 
-    void showMenu() override;
+    void showMenu(SystemContext& ctx) override;
 
     Person* createUser(std::string id, std::string name, std::string pass, std::string role);
     void updateUser(std::string id, std::string name, std::string pass);

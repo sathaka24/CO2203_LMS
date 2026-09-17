@@ -115,3 +115,12 @@ void Lecturer::recordCorrection(Course* c, int sessionID, std::string studentID,
         }
     }
 }
+
+void Lecturer::removeAssignedCourse(Course* c) {
+
+    auto it = std::find(assignedCourses.begin(), assignedCourses.end(), c);
+    
+    if (it != assignedCourses.end()) {
+        assignedCourses.erase(it);
+    }
+}
