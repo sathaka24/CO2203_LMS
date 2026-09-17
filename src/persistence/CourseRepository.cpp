@@ -10,6 +10,8 @@
 #include "scheduling/TimeSlot.h"
 #include "persistence/StorageUtils.h"
 #include "exception/Exceptions.h"
+#include "attendance/AttendanceRegister.h"
+#include "attendance/AttendanceSession.h"
 
 #include <fstream>
 #include <map>
@@ -52,7 +54,7 @@ struct PendingLinks {
 
 }
 
-CourseRepository::CourseRepository(UserRepository* users) : userRepo(users) {}
+CourseRepository::CourseRepository(UserRepository* users, string attFile): userRepo(users), attendanceFile(move(attFile)) {}
 
 void CourseRepository::save(const string& filename) {
 
@@ -275,6 +277,153 @@ void CourseRepository::load(const string& filename) {
 
             s->addCourse(link.course); // FUNCALT
             link.course->addStudent(s);
+        }
+    }
+}
+
+// below format we use for attendece record
+
+//   SESSION|courseCode|sessionID|day|start|end|location|OPEN or CLOSED
+//   RECORD|courseCode|sessionID|studentID|timestamp|status|method
+//   CORRECTION|courseCode|sessionID|studentID|lecturerID|reason|timestamp
+
+
+// A SESSION line always comes before its RECORD / CORRECTION lines.
+
+void CourseRepository::saveAttendance() const {
+    ostringstream buffer;
+    buffer << "# SESSION|code|sessionID|day|start|end|location|state\n"
+           << "# RECORD|code|sessionID|studentID|timestamp|status|method\n"
+           << "# CORRECTION|code|sessionID|studentID|lecturerID|reason|timestamp\n";
+
+    // only courses still in the map are written to the file. when a course removed
+    // attendance disappears from the file on the next save
+    for (const auto& entry : items) {
+
+        const Course* c = entry.second;
+
+        const string code = storage::checkListItem(c->getCourseCode());
+
+        for (AttendanceSession* s : c->getRegister()->getSessions()) {
+
+            const string id = to_string(s->getSessionID());
+            TimeSlot t = s->getTimeSlot();
+
+            buffer << "SESSION|" << code << '|' << id << '|'
+                   << storage::checkField(t.getDay()) << '|'
+                   << storage::checkField(t.getStartTime()) << '|'
+                   << storage::checkField(t.getEndTime()) << '|'
+                   << storage::checkField(t.getLocation()) << '|'
+                   << (s->isSessionOpen() ? "OPEN" : "CLOSED") << '\n';
+
+            for (const AttendanceRecord& r : s->getRecords()) {
+                buffer << "RECORD|" << code << '|' << id << '|'
+                       << storage::checkField(r.getStudentID()) << '|'
+                       << storage::checkField(r.getTimestamp()) << '|'
+                       << storage::checkField(r.getStatus()) << '|'
+                       << storage::checkField(r.getCaptureMethod()) << '\n';
+            }
+
+            for (const CorrectionRecord& cr : s->getCorrections()) {
+                buffer << "CORRECTION|" << code << '|' << id << '|'
+                       << storage::checkField(cr.getStudentID()) << '|'
+                       << storage::checkField(cr.getActingLecturerID()) << '|'
+                       << storage::checkField(cr.getReason()) << '|'
+                       << storage::checkField(cr.getTimestamp()) << '\n';
+            }
+        }
+    }
+
+    storage::writeFile(attendanceFile, buffer.str());
+}
+
+void CourseRepository::loadAttendance() {
+    ifstream in(attendanceFile);
+    if (!in) {
+        return;   // no attendance taken yet (first run) - not an error
+    }
+
+    map<string, AttendanceSession*> sessions; // map is use cuz it makes the search faster
+
+    string line;
+    int lineNo = 0;
+
+    while (getline(in, line)) {
+
+        ++lineNo;
+        storage::stripCR(line);
+        if (line.empty() || line[0] == '#') continue;
+
+        const string at = storage::where(attendanceFile, lineNo);
+
+        vector<string> f = storage::split(line, '|');
+
+        if (f.size() < 3) {
+
+            throw DataCorruptedException(at + ": too few fields");
+        }
+
+        const string& kind = f[0];
+        Course* c = get(f[1]);
+
+        if (c == nullptr) {
+            throw DataCorruptedException(at + ": course \"" + f[1] + "\" does not exist");
+        }
+
+        int sessionID = storage::toInt(f[2], at);
+
+        const string key = f[1] + "#" + f[2]; // here the key is just a unique string to identify each session in our session map
+
+        if (kind == "SESSION") {
+
+            if (f.size() != 8) {
+                throw DataCorruptedException(at + ": SESSION needs 8 fields");
+            }
+            if (sessions.count(key)) {
+                throw DataCorruptedException(at + ": duplicate session " + key);
+            }
+            if (f[7] != "OPEN" && f[7] != "CLOSED") {
+                throw DataCorruptedException(at + ": state must be OPEN or CLOSED");
+            }
+
+            AttendanceSession* s = new AttendanceSession(sessionID, TimeSlot(f[3], f[4], f[5], f[6]), c);
+
+            if (f[7] == "OPEN") {
+                s->openSession();
+            }
+
+            c->getRegister()->addSession(s);   // register owns it from here. means course owns
+
+            sessions[key] = s; // here we add the session to the map
+
+            continue;
+        }
+
+        auto it = sessions.find(key);
+
+        if (it == sessions.end()) {
+            throw DataCorruptedException(at + ": session " + key + " has not been declared");
+        }
+        AttendanceSession* s = it->second; // here we get the current session in the loop
+
+        // here we get the record and corrections and store them 
+        if (kind == "RECORD") {
+            if (f.size() != 7) {
+                throw DataCorruptedException(at + ": RECORD needs 7 fields");
+            }
+
+            s->restoreRecord(AttendanceRecord(f[3], f[4], f[5], f[6]));
+        }
+        else if (kind == "CORRECTION") {
+            if (f.size() != 7) {
+                throw DataCorruptedException(at + ": CORRECTION needs 7 fields");
+            }
+
+            s->restoreCorrection(CorrectionRecord(f[3], f[4], f[5], f[6]));
+        }
+        else {
+            
+            throw DataCorruptedException(at + ": unknown line type \"" + kind + "\"");
         }
     }
 }

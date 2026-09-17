@@ -144,7 +144,7 @@ void Lecturer::showMenu(SystemContext& ctx) {
             case 2: {
                 Course* c = pickCourse();
                 if (c) {
-                    viewEnrolmentList(c); // NOTADDED
+                    viewEnrolmentList(c);
                 }
                 break;
             }
@@ -172,24 +172,29 @@ void Lecturer::showMenu(SystemContext& ctx) {
                 std::string loc   = readLine("Location: ");
                 int duration      = readInt("Active duration (minutes): ");
 
-                AttendanceSession* session =
-                    openAttendanceSession(c, TimeSlot(day, start, end, loc), duration);
-                if (!session) break;
+                AttendanceSession* session = openAttendanceSession(c, TimeSlot(day, start, end, loc), duration);
+
+                if (!session) {
+                    break;
+                }
 
                 std::cout << "Capture method:\n"
                           << "  1. QR code\n"
                           << "  2. Manual entry\n"
                           << "  0. Leave session open (capture later)\n";
+
                 int method = readInt("Select: ");
 
                 if (method == 1) {
-                    std::string hash = c->getCourseCode() + "-" +
-                                       std::to_string(session->getSessionID()) + "-" +
-                                       std::to_string(std::time(nullptr) % 10000);
+        
+                    std::string hash = c->getCourseCode() + "-" + std::to_string(session->getSessionID()) + "-" + std::to_string(std::time(nullptr) % 10000);
 
                     QRCodeCapture qr(std::to_string(session->getSessionID()), duration, hash);
-                    session->setCaptureMechanism(&qr);
-                    session->runCapture();
+
+                    session->setCaptureMechanism(&qr); // here we set our capture method as qr code
+
+                    session->runCapture(); // here we start the capturing
+
                     session->setCaptureMechanism(nullptr); // qr dies at end of this block
                 }
                 else if (method == 2) {
@@ -314,6 +319,8 @@ AttendanceSession* Lecturer::openAttendanceSession(Course* c, TimeSlot slot, int
     }
 
     AttendanceRegister* reg = c->getRegister();
+
+    
     if (!reg) {
         std::cerr << "[Error] Course has no AttendanceRegister.\n";
         return nullptr;

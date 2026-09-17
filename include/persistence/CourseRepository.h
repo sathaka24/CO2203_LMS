@@ -13,9 +13,13 @@ class CourseRepository : public Repository<Course> {
 
 private:
     UserRepository* userRepo;
+    std::string attendanceFile;
+
+    void saveAttendance() const;
+    void loadAttendance();
 
 public:
-    explicit CourseRepository(UserRepository* users);
+    explicit CourseRepository(UserRepository* users, std::string attendanceFile = "data/attendance.txt");
 
     void save(const std::string& filename) override;   
     void load(const std::string& filename) override;  

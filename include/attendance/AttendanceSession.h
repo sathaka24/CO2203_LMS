@@ -38,6 +38,9 @@ public:
     void markAttendance(std::string studentID, std::string method);
     void addCorrection(std::string studentID, std::string actingLecturerID, std::string reason);
 
+    void restoreRecord(const AttendanceRecord& r);
+    void restoreCorrection(const CorrectionRecord& c);
+
     bool isSessionOpen() const;
     int getSessionID() const;
     TimeSlot getTimeSlot() const;

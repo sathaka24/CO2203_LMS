@@ -56,12 +56,13 @@ void AttendanceSession::markAttendance(std::string studentID, std::string method
         }
     }
     if (!enrolled) {
-        throw NotEnrolledException("Student " + studentID + " is not enrolled in " +
-                                   course->getCourseCode() + ".");
+        throw NotEnrolledException("Student " + studentID + " is not enrolled in " + course->getCourseCode() + ".");
     }
 
     for (const auto& rec : records) {
+
         if (rec.getStudentID() == studentID) {
+
             throw DuplicateAttendanceException("Student " + studentID + " already recorded.");
         }
     }
@@ -104,9 +105,12 @@ void AttendanceSession::runCapture() {
         }
 
         try {
+
             markAttendance(studentID, capture->getMethodName());
+
             std::cout << " -> Success: Attendance recorded for " << studentID << "\n";
         } catch (const std::exception& e) {
+
             std::cout << " -> Failed: " << e.what() << "\n";
         }
     }
@@ -119,3 +123,11 @@ int AttendanceSession::getSessionID() const { return sessionID; }
 TimeSlot AttendanceSession::getTimeSlot() const { return timeSlot; }
 std::vector<AttendanceRecord> AttendanceSession::getRecords() const { return records; }
 std::vector<CorrectionRecord> AttendanceSession::getCorrections() const { return corrections; }
+
+void AttendanceSession::restoreRecord(const AttendanceRecord& r) {
+    records.push_back(r);
+}
+
+void AttendanceSession::restoreCorrection(const CorrectionRecord& c) {
+    corrections.push_back(c);
+}
