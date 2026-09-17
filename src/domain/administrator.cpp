@@ -9,10 +9,51 @@
 #include "persistence/CourseRepository.h"
 #include "attendance/AttendanceRegister.h"
 #include "attendance/AttendanceSession.h"
+#include "scheduling/Timetable.h"
+#include "scheduling/TimeSlot.h"
+#include "persistence/StorageUtils.h"
 #include <iostream>
 #include <iomanip>
 #include <stdexcept>
 #include <vector>
+#include <cctype>
+
+namespace {
+
+// here we convert time in HH:MM format to minutes
+int parseTime(const std::string& t) {
+    if ((t.size() != 5) || (t[2] != ':') || (!std::isdigit((unsigned char)t[0])) || (!std::isdigit((unsigned char)t[1])) || (!std::isdigit((unsigned char)t[3])) || (!std::isdigit((unsigned char)t[4]))) {
+
+        throw std::invalid_argument("Time \"" + t + "\" must be in HH:MM format");
+
+    }
+
+    int h = std::stoi(t.substr(0, 2));
+    int m = std::stoi(t.substr(3, 2));
+
+
+    if (h > 23 || m > 59) {
+        
+        throw std::invalid_argument("Time \"" + t + "\" is not a valid time");
+
+    }
+    return h * 60 + m;
+}
+
+// here we check whether a course has target course as prerequest
+bool dependsOn(const Course* from, const Course* target) {
+
+    for (Course* p : from->getPrerequisites()){
+
+        if (p == target || dependsOn(p, target)) {
+            return true;
+        }
+
+    }
+    return false;
+}
+
+}
 
 Administrator::Administrator(std::string id, std::string name, std::string pass)
     : Person(std::move(id), std::move(name), std::move(pass)) {}
@@ -63,6 +104,10 @@ void Administrator::showMenu(SystemContext& ctx) {
         std::cout << " 6. Remove Course Offering\n";
         std::cout << " 7. Generate Enrolment Summary Report\n";
         std::cout << " 8. Generate Attendance Eligibility Report\n";
+        std::cout << " 9. Assign Lecturer to Course\n";
+        std::cout << "10. Add Time Slot to Course\n";
+        std::cout << "11. Add Prerequisite to Course\n";
+        std::cout << "12. Remove Prerequisite from Course\n";
         std::cout << " 0. Logout\n";
         std::cout << "========================================\n";
 
@@ -118,7 +163,7 @@ void Administrator::showMenu(SystemContext& ctx) {
                     throw std::invalid_argument("You cannot remove your own account");
                 }
 
-                removeUser(id); // NOTADDED
+                removeUser(id);
                 changed = true;
                 break;
             }
@@ -187,6 +232,45 @@ void Administrator::showMenu(SystemContext& ctx) {
 
                 generateEligibilityReport(threshold); 
 
+                break;
+            }
+
+            // assign a lecture to a course
+            case 9: {
+                std::string code = readLine("Course code: ");
+                std::string lec  = readLine("Lecturer ID (Enter to unassign): ");
+                assignLecturerToCourse(code, lec);
+                changed = true;
+                break;
+            }
+
+            // Add time slot to a course
+            case 10: {
+                std::string code  = readLine("Course code: ");
+                std::string day   = readLine("Day (e.g. Monday): ");
+                std::string start = readLine("Start time (HH:MM): ");
+                std::string end   = readLine("End time (HH:MM): ");
+                std::string loc   = readLine("Location: ");
+                addCourseTimeSlot(code, TimeSlot(day, start, end, loc));
+                changed = true;
+                break;
+            }
+
+            // Add prerequisits to a course
+            case 11: {
+                std::string code = readLine("Course code: ");
+                std::string pre  = readLine("Prerequisite course code: ");
+                addCoursePrerequisite(code, pre);
+                changed = true;
+                break;
+            }
+
+            // remove prerequistites 
+            case 12: {
+                std::string code = readLine("Course code: ");
+                std::string pre  = readLine("Prerequisite course code to remove: ");
+                removeCoursePrerequisite(code, pre);
+                changed = true;
                 break;
             }
 
@@ -431,4 +515,147 @@ void Administrator::generateEligibilityReport(float threshold) const {
     std::cout << std::left << "\nNot eligible (student/course pairs): " << notEligible << "\n";
 
     std::cout.unsetf(std::ios::fixed);   // before leave here we fixed formatting on for other menus
+}
+
+
+
+
+
+void Administrator::assignLecturerToCourse(std::string code, std::string lecturerID) {
+    if (context == nullptr) {
+        throw std::logic_error("assignLecturerToCourse called outside the admin menu");
+    }
+
+    Course* c = context->courses.get(code);
+    if (c == nullptr) {
+        throw std::invalid_argument("Course " + code + " not found");
+    }
+
+    if (lecturerID.empty()) {
+        c->assignLecturer(nullptr);
+        std::cout << "[Success] " << code << " no longer has a lecturer.\n";
+        return;
+    }
+
+    Lecturer* l = dynamic_cast<Lecturer*>(context->users.get(lecturerID));
+    if (l == nullptr) {
+        
+        throw std::invalid_argument(lecturerID + " is not a lecturer");
+    }
+
+    c->assignLecturer(l);
+
+    std::cout << "[Success] " << l->getName() << " assigned to " << code << ".\n";
+}
+
+void Administrator::addCourseTimeSlot(std::string code, const TimeSlot& slot) {
+
+    if (context == nullptr) {
+        throw std::logic_error("addCourseTimeSlot called outside the admin menu");
+    }
+
+    Course* c = context->courses.get(code);
+
+    if (c == nullptr) {
+        throw std::invalid_argument("Course " + code + " not found");
+    }
+
+    static const char* days[] = {"Monday", "Tuesday", "Wednesday", "Thursday",
+                                 "Friday", "Saturday", "Sunday"};
+    bool validDay = false;
+    for (const char* d : days) {
+
+        if (slot.getDay() == d) {
+             validDay = true; 
+             break; 
+        }
+    }
+
+    if (!validDay) {
+        throw std::invalid_argument("Day must be one of Monday..Sunday (capitalised)");
+    }
+
+    if (parseTime(slot.getStartTime()) >= parseTime(slot.getEndTime()))
+        throw std::invalid_argument("Start time must be before end time");
+
+    storage::checkListItem(slot.getLocation());
+
+    if (c->getTimetable()->checkClash(slot))
+        throw std::invalid_argument("This slot overlaps an existing slot of " + code);
+
+    for (Student* s : c->getEnrolledStudents()) {
+        if (s->getTimetable() && s->getTimetable()->checkClash(slot))
+            throw std::invalid_argument("Slot clashes with the timetable of enrolled student " + s->getUserID());
+    }
+
+    c->getTimetable()->addSlot(slot);
+
+    for (Student* s : c->getEnrolledStudents()) {
+        if (s->getTimetable()) {
+            
+            s->getTimetable()->addSlot(slot);
+
+        }
+    }
+
+    std::cout << "[Success] Added " << slot << " to " << code << ".\n";
+}
+
+void Administrator::addCoursePrerequisite(std::string code, std::string prereqCode) {
+
+    if (context == nullptr) {
+
+        throw std::logic_error("addCoursePrerequisite called outside the admin menu");
+    }
+
+    Course* c   = context->courses.get(code);
+    Course* pre = context->courses.get(prereqCode);
+    if (c == nullptr)   {
+
+
+        throw std::invalid_argument("Course " + code + " not found");
+    }
+    if (pre == nullptr) {
+
+        throw std::invalid_argument("Course " + prereqCode + " not found");
+    }
+    if (c == pre) {
+        throw std::invalid_argument("A course cannot be its own prerequisite");
+    }
+
+    if (dependsOn(pre, c)){
+
+        throw std::invalid_argument(prereqCode + " already depends on " + code + "; adding this would create a loop");
+    }
+
+    for (Course* existing : c->getPrerequisites()) {
+        if (existing == pre)
+            throw std::invalid_argument(prereqCode + " is already a prerequisite of " + code);
+    }
+
+    c->addPrerequisite(pre);
+    std::cout << "[Success] " << prereqCode << " is now a prerequisite of " << code << ".\n";
+}
+
+void Administrator::removeCoursePrerequisite(std::string code, std::string prereqCode) {
+    if (context == nullptr) {
+
+        throw std::logic_error("removeCoursePrerequisite called outside the admin menu");
+
+    }
+
+    Course* c   = context->courses.get(code);
+    Course* pre = context->courses.get(prereqCode);
+    if (c == nullptr)   {
+        
+        throw std::invalid_argument("Course " + code + " not found");
+    }
+    if (pre == nullptr) {
+        throw std::invalid_argument("Course " + prereqCode + " not found");
+
+    }
+
+    c->removePrerequisite(pre);
+
+    std::cout << "[Success] Removed " << prereqCode << " from the prerequisites of " << code << ".\n";
 }

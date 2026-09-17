@@ -3,6 +3,7 @@
 
 #include <string>
 #include "domain/Person.h"
+#include "scheduling/TimeSlot.h"
 
 class Course;   // forward declaration - M1
 
@@ -32,6 +33,11 @@ public:
 
     void generateEnrolmentReport() const;
     void generateEligibilityReport(float threshold) const;
+
+    void assignLecturerToCourse(std::string code, std::string lecturerID);
+    void addCourseTimeSlot(std::string code, const TimeSlot& slot);
+    void addCoursePrerequisite(std::string code, std::string prereqCode);
+    void removeCoursePrerequisite(std::string code, std::string prereqCode);
 };
 
 #endif
