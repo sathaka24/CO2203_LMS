@@ -11,6 +11,7 @@ class Timetable;   // forward declaration - M2
 // Owner: M1
 // Used by: M2 (EnrollmentEngine), M3 (UserRepository).
 
+struct SystemContext;
 
 class Student : public Person {
 private:
@@ -23,7 +24,7 @@ public:
     Student(std::string id, std::string name, std::string pass);
     ~Student() override;
 
-    void showMenu() override;
+    void showMenu(SystemContext& ctx) override;
 
     Timetable* getTimetable() const;
     void addCourse(Course* c);
