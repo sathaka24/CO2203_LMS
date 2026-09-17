@@ -363,18 +363,33 @@ void Lecturer::closeAttendanceSession(Course* c, int sessionID) {
 
 void Lecturer::recordCorrection(Course* c, int sessionID, std::string studentID, std::string reason, std::string status) {
     if (!c || !c->getRegister()) {
-        std::cerr << "[Error] Invalid course or register.\n";
-        return;
+        throw std::invalid_argument("Invalid course or register");
     }
 
     auto it = std::find(assignedCourses.begin(), assignedCourses.end(), c);
+
     if (it == assignedCourses.end()) {
-        std::cout << "[Access Denied] You can only correct attendance for your own courses.\n";
-        return;
+        throw std::invalid_argument("You can only correct attendance for your own courses");
+    }
+
+    bool enrolled = false;
+    for (Student* s : c->getEnrolledStudents()) {
+        if (s && s->getUserID() == studentID) {
+            enrolled = true;
+            break;
+        }
+    }
+    if (!enrolled) {
+        throw std::invalid_argument("Student " + studentID + " is not enrolled in " + c->getCourseCode());
+    }
+
+    // reason is written to the attendance file
+    if (reason.empty()) {
+        throw std::invalid_argument("Reason cannot be empty");
     }
 
     for (AttendanceSession* session : c->getRegister()->getSessions()) {
-        if (session) {
+        if (session && session->getSessionID() == sessionID) {
             session->addCorrection(studentID, this->getUserID(), reason, status);
             std::cout << "[Success] Correction appended for Student: " << studentID 
                       << " (Lecturer: " << getUserID() << ").\n";
