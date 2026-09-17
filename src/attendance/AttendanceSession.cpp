@@ -1,10 +1,14 @@
 #include "attendance/AttendanceSession.h"
 #include "attendance/AttendanceCapture.h"
+#include "domain/Course.h"
+#include "domain/Student.h"
+#include "exception/Exceptions.h"
 #include <iostream>
 #include <chrono>
 #include <ctime>
 #include <iomanip>
 #include <sstream>
+#include <stdexcept>
 
 static std::string generateTimestamp() {
     auto now = std::chrono::system_clock::now();
@@ -33,13 +37,32 @@ void AttendanceSession::setCaptureMechanism(AttendanceCapture* c) {
 
 void AttendanceSession::markAttendance(std::string studentID, std::string method) {
     if (!isOpen) {
-        throw std::runtime_error("SessionClosedException: Session #" + std::to_string(sessionID) + " is closed.");
+
+        throw SessionClosedException("Session #" + std::to_string(sessionID) + " is closed.");
+    }
+    if (course == nullptr) {
+
+        throw AttendanceException("Session #" + std::to_string(sessionID) + " is not linked to a course.");
     }
 
-    // Check duplicate
+    bool enrolled = false;
+    for (const Student* s : course->getEnrolledStudents()) {
+
+
+        if (s != nullptr && s->getUserID() == studentID) {
+
+            enrolled = true;
+            break;
+        }
+    }
+    if (!enrolled) {
+        throw NotEnrolledException("Student " + studentID + " is not enrolled in " +
+                                   course->getCourseCode() + ".");
+    }
+
     for (const auto& rec : records) {
         if (rec.getStudentID() == studentID) {
-            throw std::runtime_error("DuplicateAttendanceException: Student " + studentID + " already recorded.");
+            throw DuplicateAttendanceException("Student " + studentID + " already recorded.");
         }
     }
 
