@@ -16,6 +16,7 @@ using namespace std;
 namespace {
 
 const int USER_FIELDS = 4;
+const int STUDENT_FIELDS = 5;
 
 // The file has to record WHICH subclass each user is, otherwise we could not
 // rebuild the right object on load. dynamic_cast tells us the real type.
@@ -46,17 +47,42 @@ Person* createPerson(const string& role, const string& id,const string& name, co
 
 }
 
+/*
+    our saving format of users
+
+    # ROLE|userID|name|password|completedCourses
+    STUDENT|S1|Alice|pw|CO1010,CO1020
+    STUDENT|S2|Nimal|pw|
+    LECTURER|L1|Bob|pw|
+    ADMIN|A1|Root|pw|
+
+
+*/
+
 
 void UserRepository::save(const string& filename) {
     ostringstream buffer;
-    buffer << "# ROLE|userID|name|password\n";
+    buffer << "# ROLE|userID|name|password|completedCourses\n";
 
     for (const auto& entry : items) {
         const Person* p = entry.second;
+
+        vector<string> completed;
+
+        // here we check whether the entity is a student. cuz students only has completed course field
+        if (const Student* s = dynamic_cast<const Student*>(p)) {
+
+            for (const string& code : s->getCompletedCourses()) {
+                
+                completed.push_back(storage::checkListItem(code));
+            }
+        }
+
         buffer << roleOf(p) << '|'
                << storage::checkListItem(p->getUserID()) << '|'
                << storage::checkField(p->getName()) << '|'
                << storage::checkField(p->password)
+               << storage::join(completed, ',')
                << '\n';
     }
 
@@ -74,6 +100,7 @@ void UserRepository::load(const string& filename) {
 
     string line;
     int lineNo = 0;
+
     while (getline(in, line)) {
         ++lineNo;
         storage::stripCR(line);
@@ -83,9 +110,9 @@ void UserRepository::load(const string& filename) {
 
 
         vector<string> f = storage::split(line, '|');
-        if (f.size() != USER_FIELDS) {
+        if (f.size() != USER_FIELDS && f.size() != STUDENT_FIELDS) {
 
-            throw DataCorruptedException(at + ": expected 4 fields but found " + std::to_string(f.size()));
+            throw DataCorruptedException(at + ": expected 4 or 5 fields but found " + std::to_string(f.size()));
         }
 
         const string& role = f[0];
@@ -104,8 +131,30 @@ void UserRepository::load(const string& filename) {
         if (p == nullptr) {
             throw DataCorruptedException(at + ": unknown role \"" + role + "\"");
         }
+
+        if (f.size() == STUDENT_FIELDS && !f[4].empty()) {
+
+            Student* s = dynamic_cast<Student*>(p);
+
+            if (s == nullptr) {
+                delete p;   // not added to the map yet, so free it ourselves
+                throw DataCorruptedException(at + ": only students can have completed courses");
+            }
+
+            for (const string& code : storage::split(f[4], ',')) {
+
+                if (code.empty()) {
+                    delete p;
+                    throw DataCorruptedException(at + ": empty course code in completed list");
+                }
+
+                s->addCompletedCourse(code);
+            }
+
+        }
         add(id, p);
     }
+
 }
 
 Person* UserRepository::login() {

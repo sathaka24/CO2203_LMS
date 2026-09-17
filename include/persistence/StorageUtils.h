@@ -60,7 +60,7 @@ inline std::string checkField(const std::string& value) {
     return value;
 }
 
-// Values that appear inside lists (IDs, course codes, time slot parts)
+// Values that appear inside lists like (IDs, course codes, time slot parts)
 // additionally may not contain ',' or ';'.
 inline std::string checkListItem(const std::string& value) {
 
