@@ -192,6 +192,12 @@ void CourseRepository::load(const string& filename) {
 
         Course* c = createCourse(type, code, title, credits, capacity);
 
+        if (c == nullptr)
+        {
+            throw DataCorruptedException(at + "There is no such a course type");
+        }
+        
+
         // TODO: exception
         add(code, c);
 

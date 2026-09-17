@@ -193,10 +193,10 @@ void Lecturer::showMenu(SystemContext& ctx) {
                     session->setCaptureMechanism(nullptr); // qr dies at end of this block
                 }
                 else if (method == 2) {
-                    FileReplayCapture fcapture("attendeceshee.txt");
-                    fcapture.beginSession();
-                    fcapture.captureNext();
-                    fcapture.endSession();
+                       FileReplayCapture fc(readLine("Replay file path: "));
+                        session->setCaptureMechanism(&fc);
+                        session->runCapture();
+                        session->setCaptureMechanism(nullptr);
 
 
                 }
@@ -244,7 +244,6 @@ void Lecturer::showMenu(SystemContext& ctx) {
                 std::cout << "\n--- Attendance for " << c->getCourseCode() << " ---\n";
                 if (!listSessions(c)) break;
 
-                AttendanceRegister* reg = c->getRegister();
                 for (Student* s : c->getEnrolledStudents()) {
                     std::cout << "  " << s->getUserID() << "  " << s->getName() << ": "
                               << reg->calculateStudentPercentage(s->getUserID()) << "%\n";

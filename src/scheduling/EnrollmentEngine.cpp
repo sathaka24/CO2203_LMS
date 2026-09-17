@@ -59,15 +59,6 @@ void EnrollmentEngine::enrolStudent(const std::string& studentID, const std::str
     student->addCourse(course);
     course->addStudent(student);
 
-    // 5. Add course slots to student's timetable
-    Timetable* studentTimetable = student->getTimetable();
-    Timetable* courseTimetable = course->getTimetable();
-    if (studentTimetable && courseTimetable) {
-        for (TimeSlot* slot : courseTimetable->getSlots()) {
-            studentTimetable->addSlot(*slot);
-        }
-    }
-
     std::cout << "[Success] Student " << studentID << " enrolled in " << courseCode << "\n";
 }
 
