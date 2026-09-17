@@ -1,4 +1,5 @@
 #include "scheduling/Timetable.h"
+#include "exception/Exceptions.h"
 #include <iostream>
 
 void Timetable::resize(int newCapacity) {
@@ -94,7 +95,7 @@ Timetable& Timetable::operator=(Timetable&& other) noexcept {
 
 void Timetable::addSlot(const TimeSlot& slot) {
     if (checkClash(slot)) {
-        throw std::runtime_error("Timetable clash: Slot overlaps with an existing class!");
+        throw TimetableClashException("Timetable clash: Slot overlaps with an existing class!");
     }
     if (count >= capacity) {
         resize(capacity * 2);
