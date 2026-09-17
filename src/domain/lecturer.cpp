@@ -275,19 +275,31 @@ std::vector<Course*> Lecturer::getAssignedCourses() const {
 
 void Lecturer::viewEnrolmentList(Course* c) const {
     if (!c) {
-        std::cerr << "[Error] Course pointer is null.\n";
-        return;
+        throw std::invalid_argument("Course pointer is null");
     }
-
+    
     auto it = std::find(assignedCourses.begin(), assignedCourses.end(), c);
     if (it == assignedCourses.end()) {
-        std::cout << "[Access Denied] You are not the assigned lecturer for course " 
-                  << c->getCourseCode() << ".\n";
-        return;
+        throw std::invalid_argument("You are not the assigned lecturer for course " +
+                                    c->getCourseCode());
     }
 
-    std::cout << "\n--- Enrolment List for Course: " << c->getCourseCode() << " ---\n";
+    const std::vector<Student*>& students = c->getEnrolledStudents();
+
+    std::cout << "\n--- Enrolment List for " << c->getCourseCode() << " ---\n";
     std::cout << *c << "\n";
+    std::cout << std::string(40, '-') << "\n";
+
+    if (students.empty()) {
+        std::cout << "  No students enrolled.\n";
+    }
+    for (Student* s : students) {
+        std::cout << "  - " << s->getUserID() << "  " << s->getName() << "\n";
+    }
+
+    std::cout << std::string(40, '-') << "\n";
+    std::cout << "  " << c->getEnrolledCount() << "/" << c->getCapacity() << " enrolled"
+              << (c->getEnrolledCount() >= c->getCapacity() ? "  (FULL)" : "") << "\n";
 }
 
 AttendanceSession* Lecturer::openAttendanceSession(Course* c, TimeSlot slot, int durationMins) {
