@@ -9,6 +9,7 @@
 #include "attendance/QRCodeCapture.h"
 #include "attendance/FileReplayCapture.h"
 #include "app/SystemContext.h"
+#include "persistence/StorageUtils.h"
 #include <iostream>
 #include <algorithm>
 #include <limits>
@@ -386,6 +387,15 @@ void Lecturer::recordCorrection(Course* c, int sessionID, std::string studentID,
     // reason is written to the attendance file
     if (reason.empty()) {
         throw std::invalid_argument("Reason cannot be empty");
+    }
+
+    storage::checkField(reason);
+
+    for (char& ch : status) {
+        ch = static_cast<char>(std::toupper(static_cast<unsigned char>(ch)));
+    }
+    if (status != "PRESENT" && status != "ABSENT") {
+        throw std::invalid_argument("Status must be PRESENT or ABSENT");
     }
 
     for (AttendanceSession* session : c->getRegister()->getSessions()) {

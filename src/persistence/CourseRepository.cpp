@@ -298,7 +298,7 @@ void CourseRepository::saveAttendance() const {
     ostringstream buffer;
     buffer << "# SESSION|code|sessionID|day|start|end|location|state\n"
            << "# RECORD|code|sessionID|studentID|timestamp|status|method\n"
-           << "# CORRECTION|code|sessionID|studentID|lecturerID|reason|timestamp\n";
+           << "# CORRECTION|code|sessionID|studentID|lecturerID|reason|status|timestamp\n";
 
     // only courses still in the map are written to the file. when a course removed
     // attendance disappears from the file on the next save
@@ -333,6 +333,7 @@ void CourseRepository::saveAttendance() const {
                        << storage::checkField(cr.getStudentID()) << '|'
                        << storage::checkField(cr.getActingLecturerID()) << '|'
                        << storage::checkField(cr.getReason()) << '|'
+                       << storage::checkField(cr.getStatus()) << '|'
                        << storage::checkField(cr.getTimestamp()) << '\n';
             }
         }
@@ -419,11 +420,11 @@ void CourseRepository::loadAttendance() {
             s->restoreRecord(AttendanceRecord(f[3], f[4], f[5], f[6]));
         }
         else if (kind == "CORRECTION") {
-            if (f.size() != 7) {
+            if (f.size() != 8) {
                 throw DataCorruptedException(at + ": CORRECTION needs 7 fields");
             }
 
-            s->restoreCorrection(CorrectionRecord(f[3], f[4], f[5], f[6]));
+            s->restoreCorrection(CorrectionRecord(f[3], f[4], f[5], f[6], f[7]));
         }
         else {
 

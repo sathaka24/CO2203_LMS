@@ -26,23 +26,29 @@ float AttendanceRegister::calculateStudentPercentage(std::string studID) const {
     int attended = 0;
 
     for (const auto* s : sessions) {
-        if (!s->isSessionOpen()) { // Count only concluded sessions
-            totalHeld++;
-            for (const auto& rec : s->getRecords()) {
-                if (rec.getStudentID() == studID && rec.getStatus() == "PRESENT") {
-                    attended++;
-                    break;
-                }
-            }
+        if (s->isSessionOpen()) {
+            continue;   // only closed sessions count
+        }
+        totalHeld++;
 
-            for(const auto& rec : s->getCorrections()){
-                if (rec.getStudentID() == studID && rec.getStatus() == "PRESENT")
-                {
-                    attended++;
-                    break;
-                }
-                
+        bool present = false;
+        for (const auto& rec : s->getRecords()) {
+            if (rec.getStudentID() == studID && rec.getStatus() == "PRESENT") {
+                present = true;
+                break;
             }
+        }
+
+
+        
+        for (const auto& cor : s->getCorrections()) {
+            if (cor.getStudentID() == studID) {
+                present = (cor.getStatus() == "PRESENT");
+            }
+        }
+
+        if (present) {
+            attended++;
         }
     }
 
