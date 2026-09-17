@@ -1,28 +1,34 @@
-
 #include <iostream>
 #include <limits>
+#include <filesystem>
 #include "app/SystemContext.h"
 #include "domain/Administrator.h"
 #include "persistence/UserRepository.h"
 #include "persistence/CourseRepository.h"
 #include "scheduling/EnrollmentEngine.h"
+#include "exception/Exceptions.h"
 
 int main() {
+    std::filesystem::create_directories("data");   // saves fail without this folder
+
     UserRepository users;
-    CourseRepository courses(&users);
+    CourseRepository courses(&users, "data/attendance.txt");
     EnrollmentEngine enrollment(&users, &courses);
 
-    // Load data (if no users file, create a default admin)
     try {
-        users.load("data/users.txt");
-    } catch (...) {
-        users.add("admin", new Administrator("admin", "Admin", "admin"));
+        try {
+            users.load("data/users.txt");
+        } catch (const MissingFileException&) {   // first run only
+            users.add("admin", new Administrator("admin", "Admin", "admin"));
+        }
+        courses.load("data/courses.txt");
+    } catch (const std::exception& e) {
+        std::cerr << "Load failed: " << e.what() << "\n";
+        return 1;   // don't continue, or the next save overwrites your files
     }
-    courses.load("data/courses.txt");
 
     SystemContext ctx{users, courses, enrollment, "data/users.txt", "data/courses.txt"};
 
-    // Login and show the menu for that user
     Person* user = users.login();
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
@@ -33,7 +39,6 @@ int main() {
 
     user->showMenu(ctx);
 
-    // Save before exit
     users.save("data/users.txt");
     courses.save("data/courses.txt");
     return 0;
