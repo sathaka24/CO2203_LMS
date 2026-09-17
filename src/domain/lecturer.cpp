@@ -8,6 +8,8 @@
 #include "scheduling/TimeSlot.h"
 #include "attendance/QRCodeCapture.h"
 #include "attendance/FileReplayCapture.h"
+#include "scheduling/Timetable.h"
+#include "exception/Exceptions.h"
 #include "app/SystemContext.h"
 #include "persistence/StorageUtils.h"
 #include <iostream>
@@ -334,7 +336,7 @@ AttendanceSession* Lecturer::openAttendanceSession(Course* c, TimeSlot slot, int
 
     int nextSessionID = static_cast<int>(reg->getSessions().size()) + 1;
     AttendanceSession* session = new AttendanceSession(nextSessionID, slot, c);
-    session->openSession();
+    session->openSession(durationMins);
     reg->addSession(session);
 
     std::cout << "[Success] Opened Attendance Session #" << nextSessionID 
