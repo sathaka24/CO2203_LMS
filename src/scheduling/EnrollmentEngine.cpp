@@ -4,6 +4,7 @@
 #include "persistence/UserRepository.h"
 #include "persistence/CourseRepository.h"
 #include "scheduling/Timetable.h"
+#include "exception/Exceptions.h"
 #include <stdexcept>
 #include <iostream>
 
@@ -18,7 +19,7 @@ void EnrollmentEngine::checkPrerequisites(Student* student, Course* course) cons
     
     for (Course* prereq : prerequisites) {
         if (!student->hasCompletedCourse(prereq->getCourseCode())) {
-            throw std::runtime_error("PrerequisiteNotMetException: Missing prerequisite " + prereq->getCourseCode());
+            throw PrerequisiteNotMetException("Missing prerequisite " + prereq->getCourseCode());
         }
     }
 }
@@ -32,7 +33,7 @@ void EnrollmentEngine::checkClashes(Student* student, Course* course) const {
     // Iterate through course slots and check against student's timetable
     for (TimeSlot* slot : courseTimetable->getSlots()) {
         if (studentTimetable->checkClash(*slot)) {
-            throw std::runtime_error("TimetableClashException: Time slot clash detected!");
+            throw TimetableClashException("Time slot clash detected");
         }
     }
 }
@@ -43,12 +44,12 @@ void EnrollmentEngine::enrolStudent(const std::string& studentID, const std::str
     Student* student = dynamic_cast<Student*>(p);
     Course* course = courseRepo->get(courseCode);
 
-    if (!student) throw std::runtime_error("EnrollmentException: Student not found.");
-    if (!course) throw std::runtime_error("EnrollmentException: Course not found.");
+    if (!student) throw EnrollmentException("Student " + studentID + " not found");
+    if (!course)  throw EnrollmentException("Course " + courseCode + " not found");
 
     // 2. Check if course is full
     if (course->getEnrolledCount() >= course->getCapacity()) {
-        throw std::runtime_error("CourseFullException: Course " + courseCode + " is at maximum capacity.");
+        throw CourseFullException("Course " + courseCode + " is at maximum capacity");
     }
 
     // 3. Validate rules (Owned by M2)
@@ -68,7 +69,7 @@ void EnrollmentEngine::dropStudent(const std::string& studentID, const std::stri
     Course* course = courseRepo->get(courseCode);
 
     if (!student || !course) {
-        throw std::runtime_error("EnrollmentException: Student or Course not found.");
+        throw EnrollmentException("Student or course not found");
     }
 
     student->removeCourse(course);
