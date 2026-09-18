@@ -124,10 +124,13 @@ void Administrator::showMenu(SystemContext& ctx) {
             // Creating a user
             case 1: {
                 std::string role = readLine("Role (Student/Lecturer/Admin): ");
-                std::string id   = readLine("User ID: ");
 
+                std::string id   = ctx.users.nextUserID(role);
+                std::cout << "Assigned user ID: " << id << "\n";
+
+                // we keep this still for saftey
                 if (ctx.users.get(id) != nullptr) {
-                    throw std::invalid_argument("User ID " + id + " already exists");
+                    throw std::invalid_argument("Generate ID " + id + " already exists");
                 }
 
                 std::string name = readLine("Name: ");

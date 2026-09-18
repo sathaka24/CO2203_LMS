@@ -8,6 +8,7 @@
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
+#include <iomanip>
 
 using namespace std;
 
@@ -178,4 +179,43 @@ Person* UserRepository::login() {
 
         return nullptr;
     }
+}
+
+std::string UserRepository::rolePrefix(const std::string& role) {
+    if (role == "Student"  || role == "student")  {
+        return "S";
+    }
+    if (role == "Lecturer" || role == "lecturer") {
+        return "L";
+    }
+    if (role == "Administrator" || role == "Admin" || role == "admin") {
+        return "A";
+    }
+    throw std::invalid_argument("Unknown user role: " + role);
+}
+
+std::string UserRepository::nextUserID(const std::string& role) {
+
+    const std::string prefix = rolePrefix(role);
+    int highest = 0;
+
+    // here we iterate through each person and get id
+    for (const auto& entry : items) {
+
+        const std::string& id = entry.first;
+
+        if (id.size() != 5) continue; // check format of id. we use S0001, L0001, A0001
+
+        if (id.compare(0, 1, prefix) != 0) continue; // this line allows only to continue on specific role only. otherwis skip to next person
+
+        const std::string digits = id.substr(prefix.size());
+
+        if (digits.find_first_not_of("0123456789") != std::string::npos) continue; // here we again check whether our substring is a number
+
+        highest = std::max(highest, std::stoi(digits)); // get highest digit
+    }
+
+    std::ostringstream os;
+    os << prefix << std::setw(4) << std::setfill('0') << (highest + 1);
+    return os.str();
 }

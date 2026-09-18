@@ -1,0 +1,3 @@
+# ROLE|userID|name|password|completedCourses
+LECTURER|01|Sanka|sanka|
+ADMIN|admin|Admin|admin|

@@ -1,0 +1,2 @@
+# TYPE|code|title|credits|capacity|lecturerID|prerequisites|timeslots|students
+Lecture|CO2203|OOP|2|35|01||Monday,10:30,11:30,waraya|
