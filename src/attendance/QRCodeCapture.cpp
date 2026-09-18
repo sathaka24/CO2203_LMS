@@ -6,7 +6,7 @@ QRCodeCapture::QRCodeCapture(std::string courseCode, int sessionID, int duration
 
     : courseCode(std::move(courseCode)), sessionID(sessionID), expiresAt(std::time(nullptr) + durationMins * 60) {
 
-        payload = qrtoken::makeToken(courseCode, sessionID, expiresAt);
+        payload = qrtoken::makeToken(this->courseCode, sessionID, expiresAt);
     }
 
 QRCodeCapture::~QRCodeCapture() = default;

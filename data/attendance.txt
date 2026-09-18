@@ -1,4 +1,6 @@
 # SESSION|code|sessionID|day|start|end|location|state|openedAt|durationMins
 # RECORD|code|sessionID|studentID|timestamp|status|method
 # CORRECTION|code|sessionID|studentID|lecturerID|reason|status|timestamp
-SESSION|CO2203|1|Monday|10:30|11:30|waraya|OPEN|1789705098|60
+SESSION|CO2202|1|Tudesday|10:00|10:15|L3434342|CLOSED|0|0
+SESSION|CO2202|2|Tuesday|10:30|10:45|L34343|CLOSED|1789751089|15
+RECORD|CO2202|2|S0001|2026-09-18 22:35:35|PRESENT|SELF_CHECKIN
