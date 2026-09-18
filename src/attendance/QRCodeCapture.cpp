@@ -1,47 +1,45 @@
 #include "attendance/QRCodeCapture.h"
+#include "attendance/QrToken.h"
 #include <iostream>
 
-QRCodeCapture::QRCodeCapture(std::string session, int expiry, std::string hash)
-    : sessionID(std::move(session)), expiryTime(expiry), integrityHash(std::move(hash)) {}
+QRCodeCapture::QRCodeCapture(std::string courseCode, int sessionID, int durationMins)
+
+    : courseCode(std::move(courseCode)), sessionID(sessionID), expiresAt(std::time(nullptr) + durationMins * 60) {
+
+        payload = qrtoken::makeToken(courseCode, sessionID, expiresAt);
+    }
 
 QRCodeCapture::~QRCodeCapture() = default;
 
-bool QRCodeCapture::validateIntegrity(std::string payload) const {
-    // Valid payload format: <studentID>:<hash>
-    size_t colonPos = payload.find(':');
-    if (colonPos == std::string::npos) {
-        return false;
-    }
-    std::string tokenHash = payload.substr(colonPos + 1);
-    return (tokenHash == integrityHash);
-}
-
 void QRCodeCapture::beginSession() {
     std::cout << "\n=======================================================\n";
-    std::cout << " [QR CODE ATTENDANCE SESSION INITIALIZED]\n";
-    std::cout << " Session ID     : " << sessionID << "\n";
-    std::cout << " Expiry Duration: " << expiryTime << " minutes\n";
-    std::cout << " Integrity Token: " << integrityHash << "\n";
-    std::cout << " Student Payload: <StudentID>:" << integrityHash << "\n";
+    std::cout << "\n Scan this code for " << courseCode << " session #" << sessionID << "\n\n";
+    qrtoken::printQr(payload);
+    std::cout << "\n Students: scan the code, then enter <studentID> <payload> below.\n";
     std::cout << "=======================================================\n";
 }
 
 std::string QRCodeCapture::captureNext() {
-    std::string inputPayload;
-    std::cout << "Submit scanned QR Payload (or type 'EXIT' to finish): ";
-    std::cin >> inputPayload;
 
-    if (inputPayload == "EXIT" || inputPayload == "exit") {
-        return "";
-    }
+    std::string studentID;
+    std::string submitted;
 
-    if (!validateIntegrity(inputPayload)) {
-        std::cout << " [ERROR] Invalid QR Code integrity hash / expired token!\n";
+    std::cout << "Student ID and payload (or EXIT): ";
+
+    std::cin >> studentID;
+
+    if (studentID == "EXIT" || studentID == "exit") return "";
+
+    std::cin >> submitted;
+
+    std::string error;
+
+    if (!qrtoken::validateToken(submitted, courseCode, sessionID, error)) {
+
+        std::cout << " [REJECTED] " << error << "\n";
         return "INVALID_TOKEN";
     }
-
-    // Extract studentID from <studentID>:<hash>
-    return inputPayload.substr(0, inputPayload.find(':'));
+    return studentID;
 }
 
 void QRCodeCapture::endSession() {

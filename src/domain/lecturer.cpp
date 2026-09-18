@@ -192,7 +192,7 @@ void Lecturer::showMenu(SystemContext& ctx) {
         
                     std::string hash = c->getCourseCode() + "-" + std::to_string(session->getSessionID()) + "-" + std::to_string(std::time(nullptr) % 10000);
 
-                    QRCodeCapture qr(std::to_string(session->getSessionID()), duration, hash);
+                    QRCodeCapture qr(c->getCourseCode(), session->getSessionID(), duration);
 
                     session->setCaptureMechanism(&qr); // here we set our capture method as qr code
 

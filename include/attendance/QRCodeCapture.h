@@ -2,6 +2,7 @@
 #define QR_CODE_CAPTURE_H
 
 #include <string>
+#include <ctime>
 #include "attendance/AttendanceCapture.h"
 
 // Owner: M2
@@ -9,14 +10,13 @@
 
 class QRCodeCapture : public AttendanceCapture {
 private:
-    std::string sessionID;
-    int expiryTime;
-    std::string integrityHash;
-
-    bool validateIntegrity(std::string payload) const;
+    std::string courseCode;
+    int sessionID;
+    std::time_t expiresAt;
+    std::string payload;
 
 public:
-    QRCodeCapture(std::string sessionID, int expiry, std::string hash);
+    QRCodeCapture(std::string courseCode, int sessionID, int durationMins);
     ~QRCodeCapture() override;
 
     void beginSession() override;

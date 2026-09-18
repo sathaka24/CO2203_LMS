@@ -7,6 +7,7 @@
 #include "scheduling/EnrollmentEngine.h"
 #include "attendance/AttendanceRegister.h"
 #include "attendance/AttendanceSession.h"
+#include "attendance/QrToken.h"
 #include <iostream>
 #include <algorithm>
 #include <stdexcept>
@@ -187,8 +188,19 @@ void Student::showMenu(SystemContext& ctx) {
 
                 if (pick < 1 || pick > static_cast<int>(open.size())) break;
 
+                Course* c = open[pick - 1].first;
+                AttendanceSession* s = open[pick - 1].second;
+
+                std::string payload = readLine("Scan the QR and enter the payload: ");
+                std::string error;
+
+                if (!qrtoken::validateToken(payload, c->getCourseCode(), s->getSessionID(), error)) {
+                    std::cout << "Check-in rejected: " << error << "\n";
+                    break;
+                }
+
                 // markAttendance throws if closed or already marked
-                open[pick - 1].second->markAttendance(getUserID(), "SELF_CHECKIN");
+                s->markAttendance(getUserID(), "SELF_CHECKIN");
 
                 std::cout << "[Success] Checked in to " << open[pick - 1].first->getCourseCode()
                           << " session #" << open[pick - 1].second->getSessionID() << "\n";
