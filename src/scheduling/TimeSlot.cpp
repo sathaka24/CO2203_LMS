@@ -44,6 +44,7 @@ std::string TimeSlot::getStartTime() const { return startTime; }
 std::string TimeSlot::getEndTime() const { return endTime; }
 std::string TimeSlot::getLocation() const { return location; }
 
+// operator << 
 std::ostream& operator<<(std::ostream& os, const TimeSlot& ts) {
     os << "[" << ts.day << " " << ts.startTime << "-" << ts.endTime << " @ " << ts.location << "]";
     return os;
