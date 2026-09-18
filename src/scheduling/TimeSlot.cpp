@@ -50,6 +50,7 @@ std::ostream& operator<<(std::ostream& os, const TimeSlot& ts) {
     return os;
 }
 
+// oparator &
 bool TimeSlot::operator&(const TimeSlot& other) const {
     return overlaps(other);
 }
