@@ -318,7 +318,7 @@ void CourseRepository::saveAttendance() const {
                    << storage::checkField(t.getStartTime()) << '|'
                    << storage::checkField(t.getEndTime()) << '|'
                    << storage::checkField(t.getLocation()) << '|'
-                   << (s->isSessionOpen() ? "OPEN" : "CLOSED") << '\n'
+                   << (s->isSessionOpen() ? "OPEN" : "CLOSED") << '|'
                    << s->getOpenedAt() << '|' 
                    << s->getDurationMins() << '\n';
 
