@@ -18,6 +18,7 @@ add_subdirectory(exception)
 add_subdirectory(persistence)
 add_subdirectory(scheduling)
 add_subdirectory(attendance)
+add_subdirectory(third_party)
 
 # ---- Executable (same name as the Makefile's bin/registration) ----
 add_executable(registration main.cpp)

@@ -5,4 +5,5 @@ target_sources(lms_core PRIVATE
     CorrectionRecord.cpp
     FileReplayCapture.cpp
     QRCodeCapture.cpp
+    QrToken.cpp
 )
