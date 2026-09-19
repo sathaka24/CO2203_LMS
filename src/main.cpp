@@ -16,13 +16,29 @@ int main() {
     EnrollmentEngine enrollment(&users, &courses);
 
     try {
+
+        bool firstRun = false;
+
         try {
             users.load("data/users.txt");
         } catch (const MissingFileException&) {   // first run only
+
+            firstRun = true;
+
             users.add("admin", new Administrator("admin", "Admin", "admin"));
         }
-        courses.load("data/courses.txt");
+        try {
+            courses.load("data/courses.txt");
+        } catch (const MissingFileException&) {
+            // Missing courses file is only acceptable on a genuine first run.
+            // If users.txt existed, courses.txt has been moved or deleted and
+            // continuing would overwrite it with an empty list on save.
+            
+            if (!firstRun) throw;
+        }
+
     } catch (const std::exception& e) {
+
         std::cerr << "Load failed: " << e.what() << "\n";
         return 1;   // don't continue, or the next save overwrites your files
     }
