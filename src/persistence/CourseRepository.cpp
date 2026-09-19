@@ -151,6 +151,10 @@ void CourseRepository::load(const string& filename) {
 
     ifstream in(filename);
 
+    if (!in) {
+        throw MissingFileException("Course file not found: " + filename);
+    }
+
     clear();
 
     // this vectors we use to store the course details which we load from the course.txt data file
