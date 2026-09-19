@@ -2,6 +2,7 @@
 #define ENROLLMENT_ENGINE_H
 
 #include <string>
+#include <vector>
 
 class UserRepository;     // forward declaration - M3
 class CourseRepository;   // forward declaration - M3
@@ -18,7 +19,8 @@ private:
 
     // Validation helpers (Must have 'const' to match .cpp)
     void checkPrerequisites(Student* s, Course* c) const;   
-    void checkClashes(Student* s, Course* c) const;         
+    void checkClashes(Student* s, Course* c) const;     
+    void checkPrerequisiteTree(Student* s, Course* c, std::vector<const Course*>& visited) const;    
 
 public:
     EnrollmentEngine(UserRepository* u, CourseRepository* c);

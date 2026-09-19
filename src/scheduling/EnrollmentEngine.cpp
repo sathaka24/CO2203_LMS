@@ -7,21 +7,16 @@
 #include "exception/Exceptions.h"
 #include <stdexcept>
 #include <iostream>
+#include <algorithm>
 
 EnrollmentEngine::EnrollmentEngine(UserRepository* uRepo, CourseRepository* cRepo)
     : userRepo(uRepo), courseRepo(cRepo) {}
 
 void EnrollmentEngine::checkPrerequisites(Student* student, Course* course) const {
-    // Assuming Course has a getPrerequisites() returning a vector of Course pointers
-    // and Student has a method to check if they have completed/enrolled in it.
-    // (This logic might need adjustment based on exactly how Member 1 implements Student).
-    auto prerequisites = course->getPrerequisites();
     
-    for (Course* prereq : prerequisites) {
-        if (!student->hasCompletedCourse(prereq->getCourseCode())) {
-            throw PrerequisiteNotMetException("Missing prerequisite " + prereq->getCourseCode());
-        }
-    }
+    std::vector<const Course*> visited;
+    checkPrerequisiteTree(student, course, visited);
+
 }
 
 void EnrollmentEngine::checkClashes(Student* student, Course* course) const {
@@ -76,4 +71,23 @@ void EnrollmentEngine::dropStudent(const std::string& studentID, const std::stri
     course->removeStudent(student);
     
     std::cout << "[Success] Student " << studentID << " dropped " << courseCode << "\n";
+}
+
+
+// here we check the pre requisits recursivly
+void EnrollmentEngine::checkPrerequisiteTree(Student* student, Course* course, std::vector<const Course*>& visited) const {
+
+    // here is the base case 
+    if (std::find(visited.begin(), visited.end(), course) != visited.end()) {
+        return;
+    }
+    visited.push_back(course);
+
+    for (Course* prereq : course->getPrerequisites()) {
+
+        if (!student->hasCompletedCourse(prereq->getCourseCode())) {
+            throw PrerequisiteNotMetException("Missing prerequisite " + prereq->getCourseCode() + " (required for " + course->getCourseCode() + ")");
+        }
+        checkPrerequisiteTree(student, prereq, visited);
+    }
 }
